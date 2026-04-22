@@ -1,14 +1,13 @@
 {% extends "base.html" %}
 {% block title %}Amortisman — Frsly{% endblock %}
 {% block extra_style %}
-.disposed-row td { opacity: 0.45; }
-.gain { color: var(--success) !important; font-weight: 700; }
-.loss { color: var(--danger) !important; font-weight: 700; }
-.disp-badge { display:inline-flex;align-items:center;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:700;background:#fff3cd;color:#856404;border:1px solid #ffc107;margin-left:6px; }
+.disp-badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:700;background:#fff3cd;color:#856404;border:1px solid #ffc107;margin-left:6px;}
+.gain{color:var(--success)!important;font-weight:700;}
+.loss{color:var(--danger)!important;font-weight:700;}
 {% endblock %}
 {% block content %}
 <div class="pg-hdr">
-  <div class="pg-hdr-left">
+  <div>
     <div class="pg-title">Amortisman</div>
     <div class="pg-meta">IAS 16 — Dogrusal Amortisman, Hareket Tablosu ve Elden Cikaris</div>
   </div>
@@ -18,14 +17,12 @@
   </button>
 </div>
 
-<!-- Period Bar -->
 <div class="period-bar">
   <span class="period-label">Raporlama Donemi:</span>
   <select class="period-select" id="periodSel" onchange="onPeriodChange()"></select>
   <span class="period-info" id="periodInfo"></span>
 </div>
 
-<!-- Stats -->
 <div class="stats-row">
   <div class="stat-card"><div class="stat-label">Toplam Maliyet</div><div class="stat-value" id="sCost">—</div><div class="stat-sub" id="sCount">0 varlik</div></div>
   <div class="stat-card"><div class="stat-label">Birikmiş Amortisman</div><div class="stat-value stat-danger" id="sDep">—</div><div class="stat-sub">Donem sonu</div></div>
@@ -33,63 +30,56 @@
   <div class="stat-card"><div class="stat-label">Donem Amortismani</div><div class="stat-value" id="sMon">—</div><div class="stat-sub">Bu donem gideri</div></div>
 </div>
 
-<!-- Tabs -->
 <div class="tabs">
   <button class="tab-btn active" id="tabBtn-list" onclick="switchTab('list')">Varlik Listesi</button>
   <button class="tab-btn" id="tabBtn-movement" onclick="switchTab('movement');loadMovement()">Hareket Tablosu</button>
   <button class="tab-btn" id="tabBtn-disposal" onclick="switchTab('disposal')">Elden Cikaris</button>
 </div>
 
-<!-- Tab: List -->
 <div class="tab-panel active" id="tab-list">
   <div class="table-wrap">
     <table>
       <thead><tr>
-        <th>GL Kodu</th><th>Varlik Adi</th>
-        <th class="r">Maliyet</th><th class="r">Omur</th><th>Aktivasyon</th>
-        <th class="r">Birikmiş Amor.</th><th class="r">Net Defter Degeri</th><th></th>
+        <th>GL Kodu</th><th>Varlik</th><th class="r">Maliyet</th>
+        <th class="r">Omur</th><th>Aktivasyon</th>
+        <th class="r">Birikmiş</th><th class="r">NBV</th><th></th>
       </tr></thead>
-      <tbody id="assetBody">
-        <tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-3)">Yukleniyor...</td></tr>
-      </tbody>
+      <tbody id="assetBody"></tbody>
     </table>
   </div>
 </div>
 
-<!-- Tab: Movement -->
 <div class="tab-panel" id="tab-movement">
-  <div style="font-size:12px;color:var(--text-3);margin-bottom:12px;font-weight:500;" id="movementInfo"></div>
+  <div style="font-size:12px;color:var(--text-3);margin-bottom:12px;font-weight:500;" id="mvInfo"></div>
   <div class="table-wrap" style="overflow-x:auto;">
-    <table style="min-width:900px;">
+    <table style="min-width:860px;">
       <thead>
         <tr>
           <th rowspan="2">GL</th><th rowspan="2">Varlik</th>
-          <th colspan="3" style="text-align:center;background:hsl(var(--hue),80%,95%);color:var(--accent-text);">MALİYET</th>
-          <th colspan="4" style="text-align:center;background:#fff5f5;color:var(--danger);">BİRİKMİŞ AMORTİSMAN</th>
-          <th colspan="2" style="text-align:center;background:var(--accent-light);color:var(--accent-text);">NBV</th>
+          <th colspan="3" style="text-align:center;color:var(--accent-text);">MALİYET</th>
+          <th colspan="4" style="text-align:center;color:var(--danger);">BİRİKMİŞ AMORTİSMAN</th>
+          <th colspan="2" style="text-align:center;color:var(--accent);">NBV</th>
         </tr>
         <tr>
-          <th class="r">Acilis</th><th class="r">Eklemeler</th><th class="r">Cikislar</th>
-          <th class="r">Acilis</th><th class="r">Donem</th><th class="r">Cikislar</th><th class="r">Kapanis</th>
+          <th class="r">Acilis</th><th class="r">Ekleme</th><th class="r">Cikis</th>
+          <th class="r">Acilis</th><th class="r">Donem</th><th class="r">Cikis</th><th class="r">Kapanis</th>
           <th class="r">Acilis</th><th class="r">Kapanis</th>
         </tr>
       </thead>
-      <tbody id="movementBody"></tbody>
+      <tbody id="mvBody"></tbody>
     </table>
   </div>
 </div>
 
-<!-- Tab: Disposal -->
 <div class="tab-panel" id="tab-disposal">
   <div class="table-wrap">
     <table>
       <thead><tr>
-        <th>Varlik</th><th>Elden Cikaris Tarihi</th>
-        <th class="r">Maliyet</th><th class="r">Birikmiş Amor.</th>
-        <th class="r">Defter Degeri</th><th class="r">Satis Fiyati</th>
-        <th class="r">Kar / (Zarar)</th><th></th>
+        <th>Varlik</th><th>Tarih</th><th class="r">Maliyet</th>
+        <th class="r">Birikmiş</th><th class="r">Defter Degeri</th>
+        <th class="r">Satis Fiyati</th><th class="r">Kar / (Zarar)</th><th></th>
       </tr></thead>
-      <tbody id="disposalBody"></tbody>
+      <tbody id="dispBody"></tbody>
     </table>
   </div>
 </div>
@@ -97,69 +87,39 @@
 <!-- Add Modal -->
 <div class="modal" id="addModal">
   <div class="modal-box">
-    <div class="modal-hdr">
-      <div class="modal-title">Yeni Varlik Ekle</div>
-      <button class="modal-close" onclick="document.getElementById('addModal').classList.remove('open')">×</button>
-    </div>
+    <div class="modal-hdr"><div class="modal-title">Varlik Ekle</div><button class="modal-close" onclick="closeM('addModal')">×</button></div>
     <div class="modal-body">
       <div class="form-row form-row-2" style="gap:14px;">
-        <div class="form-group form-row-full">
-          <label class="form-label">Varlik Adi *</label>
-          <input class="form-input" id="fName" placeholder="Ornek: Uretim Makinesi A">
-        </div>
-        <div class="form-group">
-          <label class="form-label">GL / Kebir Kodu</label>
-          <input class="form-input" id="fGl" placeholder="Ornek: 253.01.001">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Maliyet (TRY) *</label>
-          <input class="form-input" type="number" id="fCost" placeholder="1000000">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Faydali Omur (Yil) *</label>
-          <input class="form-input" type="number" id="fLife" placeholder="5">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Aktivasyon Tarihi *</label>
-          <input class="form-input" type="date" id="fDate">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Kalinti Deger (TRY)</label>
-          <input class="form-input" type="number" id="fResidual" value="0">
-        </div>
+        <div class="form-group form-row-full"><label class="form-label">Varlik Adi *</label><input class="form-input" id="fN" placeholder="Makine A"></div>
+        <div class="form-group"><label class="form-label">GL / Kebir Kodu</label><input class="form-input" id="fG" placeholder="253.01"></div>
+        <div class="form-group"><label class="form-label">Maliyet (TRY) *</label><input class="form-input" type="number" id="fC" placeholder="1000000"></div>
+        <div class="form-group"><label class="form-label">Faydali Omur (Yil) *</label><input class="form-input" type="number" id="fL" placeholder="5"></div>
+        <div class="form-group"><label class="form-label">Aktivasyon Tarihi *</label><input class="form-input" type="date" id="fD"></div>
+        <div class="form-group"><label class="form-label">Kalinti Deger</label><input class="form-input" type="number" id="fR" value="0"></div>
       </div>
     </div>
     <div class="modal-ftr">
-      <button class="btn btn-secondary" onclick="document.getElementById('addModal').classList.remove('open')">Iptal</button>
+      <button class="btn btn-secondary" onclick="closeM('addModal')">Iptal</button>
       <button class="btn btn-primary" onclick="saveAsset()">Kaydet</button>
     </div>
   </div>
 </div>
 
 <!-- Dispose Modal -->
-<div class="modal" id="disposeModal">
+<div class="modal" id="dispModal">
   <div class="modal-box">
-    <div class="modal-hdr">
-      <div class="modal-title">Elden Cikaris Kaydi</div>
-      <button class="modal-close" onclick="document.getElementById('disposeModal').classList.remove('open')">×</button>
-    </div>
+    <div class="modal-hdr"><div class="modal-title">Elden Cikaris</div><button class="modal-close" onclick="closeM('dispModal')">×</button></div>
     <div class="modal-body">
-      <div id="disposeInfo" style="background:var(--surface2);border-radius:var(--radius-sm);padding:14px;margin-bottom:16px;"></div>
+      <div id="dInfo" style="background:var(--surface2);border-radius:var(--radius-sm);padding:14px;margin-bottom:14px;"></div>
       <div class="form-row form-row-2" style="gap:14px;">
-        <div class="form-group">
-          <label class="form-label">Elden Cikaris Tarihi</label>
-          <input class="form-input" type="date" id="dDate" oninput="previewDisposal()">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Satis Fiyati (TRY)</label>
-          <input class="form-input" type="number" id="dPrice" placeholder="0" oninput="previewDisposal()">
-        </div>
+        <div class="form-group"><label class="form-label">Elden Cikaris Tarihi</label><input class="form-input" type="date" id="dD" oninput="prevDisp()"></div>
+        <div class="form-group"><label class="form-label">Satis Fiyati (TRY)</label><input class="form-input" type="number" id="dP" placeholder="0" oninput="prevDisp()"></div>
       </div>
-      <div id="dispPreview" style="margin-top:14px;display:none;"></div>
+      <div id="dPrev" style="margin-top:12px;display:none;"></div>
     </div>
     <div class="modal-ftr">
-      <button class="btn btn-secondary" onclick="document.getElementById('disposeModal').classList.remove('open')">Iptal</button>
-      <button class="btn btn-danger" onclick="confirmDispose()">Elden Cikaris Yap</button>
+      <button class="btn btn-secondary" onclick="closeM('dispModal')">Iptal</button>
+      <button class="btn btn-danger" onclick="doDispose()">Kaydet</button>
     </div>
   </div>
 </div>
@@ -167,67 +127,59 @@
 
 {% block scripts %}
 <script>
-let assets = {{ assets | tojson }};
-let disposeId = null;
-let curPeriod = currentPeriod();
+var assets = {{ assets | tojson }};
+var dispId = null;
+var curP = currentPeriod();
 
-// ── INIT ──────────────────────────────────────
-window.addEventListener('DOMContentLoaded', function() {
-  document.getElementById('periodSel').innerHTML = buildPeriodOptions(curPeriod);
-  updatePeriodInfo();
-  renderAll();
-});
+function closeM(id) { document.getElementById(id).classList.remove('open'); }
+
+function initPage() {
+  var sel = document.getElementById('periodSel');
+  sel.innerHTML = buildPeriodOptions(curP);
+  refreshInfo();
+  renderList();
+}
 
 function onPeriodChange() {
-  curPeriod = document.getElementById('periodSel').value;
-  updatePeriodInfo();
-  renderAll();
+  curP = document.getElementById('periodSel').value;
+  refreshInfo();
+  renderList();
   if (document.getElementById('tab-movement').classList.contains('active')) loadMovement();
 }
 
-function updatePeriodInfo() {
-  const rd = periodLastDay(curPeriod);
-  const d = rd.getDate();
-  const m = String(rd.getMonth() + 1).padStart(2, '0');
-  const y = rd.getFullYear();
-  document.getElementById('periodInfo').textContent = 'Raporlama: ' + d + '.' + m + '.' + y;
+function refreshInfo() {
+  var rd = periodLastDay(curP);
+  document.getElementById('periodInfo').textContent =
+    'Raporlama: ' + rd.getDate() + '.' + String(rd.getMonth()+1).padStart(2,'0') + '.' + rd.getFullYear();
 }
 
-// ── DEP CALC ──────────────────────────────────
-function accDepAt(asset, asOf) {
-  if (!asOf) return 0;
-  const act = new Date(asset.activation_date + 'T00:00:00');
-  if (act > asOf) return 0;
-  const depAmt = asset.cost - (asset.residual_value || 0);
-  const totalMonths = asset.useful_life * 12;
-  const monthly = depAmt / totalMonths;
-  const months = Math.min(
-    (asOf.getFullYear() - act.getFullYear()) * 12 + (asOf.getMonth() - act.getMonth()),
-    totalMonths
-  );
-  return Math.max(0, monthly * months);
+function depAt(a, dt) {
+  var act = new Date(a.activation_date + 'T00:00:00');
+  if (act > dt) return 0;
+  var total = a.cost - (a.residual_value || 0);
+  var totalM = a.useful_life * 12;
+  var monthly = total / totalM;
+  var m = (dt.getFullYear() - act.getFullYear()) * 12 + (dt.getMonth() - act.getMonth());
+  return Math.max(0, monthly * Math.min(m, totalM));
 }
 
-// ── RENDER LIST ───────────────────────────────
-function renderAll() {
-  const rd = periodLastDay(curPeriod);
-  const prevYearEnd = new Date(rd.getFullYear() - 1, 11, 31);
-  let tCost = 0, tDep = 0, tNbv = 0, tPeriodDep = 0;
-
-  const active = assets.filter(a => !a.disposed && a.disposed !== 1);
-  const tbody = document.getElementById('assetBody');
+function renderList() {
+  var rd = periodLastDay(curP);
+  var prevY = new Date(rd.getFullYear() - 1, 11, 31);
+  var tC=0, tD=0, tN=0, tM=0;
+  var active = assets.filter(function(a){ return !a.disposed && a.disposed !== 1; });
+  var tbody = document.getElementById('assetBody');
 
   if (!active.length) {
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-3)">Henuz varlik eklenmedi. "Varlik Ekle" butonuna tiklayin.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-3)">Henuz varlik yok. Varlik Ekle butonuna tiklayin.</td></tr>';
   } else {
-    let rows = '';
+    var h = '';
     active.forEach(function(a) {
-      const dep = accDepAt(a, rd);
-      const depPrev = accDepAt(a, prevYearEnd);
-      const nbv = a.cost - dep;
-      const periodDep = dep - depPrev;
-      tCost += a.cost; tDep += dep; tNbv += nbv; tPeriodDep += periodDep;
-      rows += '<tr>' +
+      var dep = depAt(a, rd);
+      var depP = depAt(a, prevY);
+      var nbv = a.cost - dep;
+      tC += a.cost; tD += dep; tN += nbv; tM += dep - depP;
+      h += '<tr>' +
         '<td class="mono" style="color:var(--text-3)">' + (a.gl_code || '—') + '</td>' +
         '<td class="fw">' + a.name + '</td>' +
         '<td class="r mono">' + fmt0(a.cost) + '</td>' +
@@ -236,202 +188,178 @@ function renderAll() {
         '<td class="r mono" style="color:var(--danger)">' + fmt(dep) + '</td>' +
         '<td class="r mono" style="color:var(--accent);font-weight:700">' + fmt(nbv) + '</td>' +
         '<td><div style="display:flex;gap:4px;justify-content:flex-end;">' +
-          '<button class="btn btn-danger btn-sm" onclick="openDispose(' + a.id + ')" title="Elden Cikaris">' +
+          '<button class="btn btn-danger btn-sm" onclick="openDisp(' + a.id + ')" title="Elden Cikaris">' +
             '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>' +
           '</button>' +
-          '<button class="btn btn-secondary btn-sm" onclick="deleteAsset(' + a.id + ')">' +
+          '<button class="btn btn-secondary btn-sm" onclick="delAsset(' + a.id + ')">' +
             '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>' +
           '</button>' +
-        '</div></td>' +
-      '</tr>';
+        '</div></td></tr>';
     });
-    rows += '<tr class="total"><td></td><td>TOPLAM</td><td class="r mono">' + fmt0(tCost) + '</td><td colspan="2"></td><td class="r mono">' + fmt(tDep) + '</td><td class="r mono">' + fmt(tNbv) + '</td><td></td></tr>';
-    tbody.innerHTML = rows;
+    h += '<tr class="total"><td></td><td>TOPLAM</td><td class="r mono">' + fmt0(tC) + '</td><td colspan="2"></td><td class="r mono">' + fmt(tD) + '</td><td class="r mono">' + fmt(tN) + '</td><td></td></tr>';
+    tbody.innerHTML = h;
   }
 
-  document.getElementById('sCost').textContent = fmt0(tCost);
-  document.getElementById('sDep').textContent = fmt0(tDep);
-  document.getElementById('sNbv').textContent = fmt0(tNbv);
-  document.getElementById('sMon').textContent = fmt0(tPeriodDep);
+  document.getElementById('sCost').textContent = fmt0(tC);
+  document.getElementById('sDep').textContent = fmt0(tD);
+  document.getElementById('sNbv').textContent = fmt0(tN);
+  document.getElementById('sMon').textContent = fmt0(tM);
   document.getElementById('sCount').textContent = active.length + ' varlik';
 
-  renderDisposals();
-}
-
-function renderDisposals() {
-  const disposed = assets.filter(a => a.disposed == 1 || a.disposed === true);
-  const tbody = document.getElementById('disposalBody');
+  var disposed = assets.filter(function(a){ return a.disposed == 1 || a.disposed === true; });
+  var db = document.getElementById('dispBody');
   if (!disposed.length) {
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-3)">Elden cikaris kaydedilmemis</td></tr>';
-    return;
+    db.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text-3)">Elden cikaris yok</td></tr>';
+  } else {
+    var dh = '';
+    disposed.forEach(function(a) {
+      var dd = new Date(a.disposal_date + 'T00:00:00');
+      var dep2 = depAt(a, dd);
+      var cv = a.cost - dep2;
+      var gl = (a.disposal_price || 0) - cv;
+      dh += '<tr>' +
+        '<td class="fw">' + a.name + ' <span style="font-size:10px;color:var(--text-3)">' + (a.gl_code||'') + '</span></td>' +
+        '<td class="mono">' + a.disposal_date + '</td>' +
+        '<td class="r mono">' + fmt0(a.cost) + '</td>' +
+        '<td class="r mono" style="color:var(--danger)">' + fmt(dep2) + '</td>' +
+        '<td class="r mono">' + fmt(cv) + '</td>' +
+        '<td class="r mono">' + fmt(a.disposal_price||0) + '</td>' +
+        '<td class="r ' + (gl>=0?'gain':'loss') + '">' + (gl>=0?'+':'') + fmt(gl) + '</td>' +
+        '<td><button class="btn btn-secondary btn-sm" onclick="unDisp(' + a.id + ')">Geri Al</button></td></tr>';
+    });
+    db.innerHTML = dh;
   }
-  let rows = '';
-  disposed.forEach(function(a) {
-    const dDate = new Date(a.disposal_date + 'T00:00:00');
-    const dep = accDepAt(a, dDate);
-    const carrying = a.cost - dep;
-    const gl = (a.disposal_price || 0) - carrying;
-    const glClass = gl >= 0 ? 'gain' : 'loss';
-    rows += '<tr>' +
-      '<td class="fw">' + a.name + '<span style="font-size:10px;color:var(--text-3);margin-left:6px">' + (a.gl_code || '') + '</span></td>' +
-      '<td class="mono">' + a.disposal_date + '</td>' +
-      '<td class="r mono">' + fmt0(a.cost) + '</td>' +
-      '<td class="r mono" style="color:var(--danger)">' + fmt(dep) + '</td>' +
-      '<td class="r mono">' + fmt(carrying) + '</td>' +
-      '<td class="r mono">' + fmt(a.disposal_price || 0) + '</td>' +
-      '<td class="r ' + glClass + '">' + (gl >= 0 ? '+' : '') + fmt(gl) + '</td>' +
-      '<td><button class="btn btn-secondary btn-sm" onclick="undispose(' + a.id + ')">Geri Al</button></td>' +
-    '</tr>';
-  });
-  tbody.innerHTML = rows;
 }
 
-// ── MOVEMENT TABLE ────────────────────────────
 async function loadMovement() {
-  const res = await fetch('/api/assets/movement?period=' + curPeriod);
-  const data = await res.json();
-  document.getElementById('movementInfo').textContent =
-    'Acilis: ' + data.od + '  |  Yil Basi: ' + data.ys + '  |  Kapanis: ' + data.rd;
-  const tbody = document.getElementById('movementBody');
-  if (!data.rows.length) {
-    tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:40px;color:var(--text-3)">Varlik yok</td></tr>';
-    return;
-  }
-  let rows = '';
+  var res = await fetch('/api/assets/movement?period=' + curP);
+  var data = await res.json();
+  document.getElementById('mvInfo').textContent = 'Acilis: ' + data.od + '  |  Yil Basi: ' + data.ys + '  |  Kapanis: ' + data.rd;
+  var tb = document.getElementById('mvBody');
+  if (!data.rows.length) { tb.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:32px;color:var(--text-3)">Varlik yok</td></tr>'; return; }
+  var h = '';
   data.rows.forEach(function(r) {
-    rows += '<tr>' +
-      '<td class="mono" style="color:var(--text-3)">' + (r.gl_code || '—') + '</td>' +
-      '<td class="fw">' + r.name + (r.disposed ? '<span class="disp-badge">Satildi</span>' : '') + '</td>' +
+    h += '<tr><td class="mono" style="color:var(--text-3)">' + (r.gl_code||'—') + '</td>' +
+      '<td class="fw">' + r.name + (r.disposed?'<span class="disp-badge">Satildi</span>':'') + '</td>' +
       '<td class="r mono">' + fmt(r.cost_open) + '</td>' +
-      '<td class="r mono" style="color:var(--success)">' + (r.additions ? '+' + fmt(r.additions) : '—') + '</td>' +
-      '<td class="r mono" style="color:var(--danger)">' + (r.disposals_cost ? '-' + fmt(r.disposals_cost) : '—') + '</td>' +
+      '<td class="r mono" style="color:var(--success)">' + (r.additions?'+'+fmt(r.additions):'—') + '</td>' +
+      '<td class="r mono" style="color:var(--danger)">' + (r.disposals_cost?'-'+fmt(r.disposals_cost):'—') + '</td>' +
       '<td class="r mono">' + fmt(r.dep_open) + '</td>' +
       '<td class="r mono" style="color:var(--danger)">' + fmt(r.dep_period) + '</td>' +
-      '<td class="r mono">' + (r.dep_disposals ? '-' + fmt(r.dep_disposals) : '—') + '</td>' +
+      '<td class="r mono">' + (r.dep_disposals?'-'+fmt(r.dep_disposals):'—') + '</td>' +
       '<td class="r mono">' + fmt(r.dep_close) + '</td>' +
       '<td class="r mono" style="color:var(--accent)">' + fmt(r.nbv_open) + '</td>' +
-      '<td class="r mono" style="color:var(--accent);font-weight:700">' + fmt(r.nbv_close) + '</td>' +
-    '</tr>';
+      '<td class="r mono" style="color:var(--accent);font-weight:700">' + fmt(r.nbv_close) + '</td></tr>';
   });
-  const t = data.totals;
-  rows += '<tr class="total"><td></td><td>TOPLAM</td>' +
-    '<td class="r mono">' + fmt(t.cost_open) + '</td>' +
-    '<td class="r mono">' + fmt(t.additions) + '</td>' +
-    '<td class="r mono">' + fmt(t.disposals_cost) + '</td>' +
-    '<td class="r mono">' + fmt(t.dep_open) + '</td>' +
-    '<td class="r mono">' + fmt(t.dep_period) + '</td>' +
-    '<td class="r mono">' + fmt(t.dep_disposals) + '</td>' +
-    '<td class="r mono">' + fmt(t.dep_close) + '</td>' +
-    '<td class="r mono">' + fmt(t.nbv_open) + '</td>' +
-    '<td class="r mono">' + fmt(t.nbv_close) + '</td></tr>';
-  tbody.innerHTML = rows;
+  var t = data.totals;
+  h += '<tr class="total"><td></td><td>TOPLAM</td><td class="r mono">' + fmt(t.cost_open) + '</td><td class="r mono">' + fmt(t.additions) + '</td><td class="r mono">' + fmt(t.disposals_cost) + '</td><td class="r mono">' + fmt(t.dep_open) + '</td><td class="r mono">' + fmt(t.dep_period) + '</td><td class="r mono">' + fmt(t.dep_disposals) + '</td><td class="r mono">' + fmt(t.dep_close) + '</td><td class="r mono">' + fmt(t.nbv_open) + '</td><td class="r mono">' + fmt(t.nbv_close) + '</td></tr>';
+  tb.innerHTML = h;
 }
 
-// ── ASSET CRUD ────────────────────────────────
 function openAddModal() {
-  document.getElementById('fName').value = '';
-  document.getElementById('fGl').value = '';
-  document.getElementById('fCost').value = '';
-  document.getElementById('fLife').value = '';
-  document.getElementById('fDate').value = '';
-  document.getElementById('fResidual').value = '0';
+  ['fN','fG','fC','fL','fD'].forEach(function(id){ document.getElementById(id).value=''; });
+  document.getElementById('fR').value = '0';
   document.getElementById('addModal').classList.add('open');
 }
 
 async function saveAsset() {
-  const data = {
-    name: document.getElementById('fName').value.trim(),
-    gl_code: document.getElementById('fGl').value.trim(),
-    cost: parseFloat(document.getElementById('fCost').value),
-    useful_life: parseInt(document.getElementById('fLife').value),
-    activation_date: document.getElementById('fDate').value,
-    residual_value: parseFloat(document.getElementById('fResidual').value) || 0,
+  var name = document.getElementById('fN').value.trim();
+  var cost = parseFloat(document.getElementById('fC').value);
+  var life = parseInt(document.getElementById('fL').value);
+  var date = document.getElementById('fD').value;
+  if (!name || !cost || !life || !date) { toast('Zorunlu alanlari doldurun.', 'error'); return; }
+  var data = {
+    name: name,
+    gl_code: document.getElementById('fG').value.trim(),
+    cost: cost,
+    useful_life: life,
+    activation_date: date,
+    residual_value: parseFloat(document.getElementById('fR').value) || 0
   };
-  if (!data.name || !data.cost || !data.useful_life || !data.activation_date) {
-    toast('Zorunlu alanlari doldurun.', 'error'); return;
-  }
-  const r = await fetch('/api/assets', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
-  const asset = await r.json();
+  var r = await fetch('/api/assets', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
+  var asset = await r.json();
   assets.push(asset);
-  document.getElementById('addModal').classList.remove('open');
-  renderAll();
-  toast(data.name + ' eklendi.');
+  closeM('addModal');
+  renderList();
+  toast(name + ' eklendi.');
 }
 
-async function deleteAsset(id) {
-  if (!confirm('Bu varlik silinsin mi?')) return;
-  await fetch('/api/assets/' + id, {method:'DELETE'});
-  assets = assets.filter(function(a) { return a.id !== id; });
-  renderAll();
-  toast('Varlik silindi.');
+async function delAsset(id) {
+  if (!confirm('Silinsin mi?')) return;
+  await fetch('/api/assets/'+id, {method:'DELETE'});
+  assets = assets.filter(function(a){ return a.id !== id; });
+  renderList();
+  toast('Silindi.');
 }
 
-// ── DISPOSAL ──────────────────────────────────
-function openDispose(id) {
-  disposeId = id;
-  const a = assets.find(function(x) { return x.id === id; });
-  const rd = periodLastDay(curPeriod);
-  const dep = accDepAt(a, rd);
-  document.getElementById('disposeInfo').innerHTML =
+function openDisp(id) {
+  dispId = id;
+  var a = assets.find(function(x){ return x.id === id; });
+  var rd = periodLastDay(curP);
+  var dep = depAt(a, rd);
+  document.getElementById('dInfo').innerHTML =
     '<div style="font-weight:700;margin-bottom:10px">' + a.name + '</div>' +
-    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;font-size:12px">' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;font-size:12px">' +
       '<div><div style="color:var(--text-3);font-size:10px;font-weight:700;margin-bottom:3px">MALIYET</div><div style="font-weight:600">' + fmt(a.cost) + '</div></div>' +
-      '<div><div style="color:var(--text-3);font-size:10px;font-weight:700;margin-bottom:3px">BİRİKMİŞ AMOR.</div><div style="color:var(--danger);font-weight:600">' + fmt(dep) + '</div></div>' +
-      '<div><div style="color:var(--text-3);font-size:10px;font-weight:700;margin-bottom:3px">DEFTER DEĞERİ</div><div style="color:var(--accent);font-weight:700">' + fmt(a.cost - dep) + '</div></div>' +
+      '<div><div style="color:var(--text-3);font-size:10px;font-weight:700;margin-bottom:3px">BIRIKMIŞ</div><div style="color:var(--danger);font-weight:600">' + fmt(dep) + '</div></div>' +
+      '<div><div style="color:var(--text-3);font-size:10px;font-weight:700;margin-bottom:3px">DEFTER DEĞERİ</div><div style="color:var(--accent);font-weight:700">' + fmt(a.cost-dep) + '</div></div>' +
     '</div>';
-  document.getElementById('dDate').value = new Date().toISOString().split('T')[0];
-  document.getElementById('dPrice').value = '';
-  document.getElementById('dispPreview').style.display = 'none';
-  document.getElementById('disposeModal').classList.add('open');
+  document.getElementById('dD').value = new Date().toISOString().split('T')[0];
+  document.getElementById('dP').value = '';
+  document.getElementById('dPrev').style.display = 'none';
+  document.getElementById('dispModal').classList.add('open');
 }
 
-function previewDisposal() {
-  const a = assets.find(function(x) { return x.id === disposeId; });
-  const dDateStr = document.getElementById('dDate').value;
-  const price = parseFloat(document.getElementById('dPrice').value) || 0;
-  if (!dDateStr) return;
-  const dDate = new Date(dDateStr + 'T00:00:00');
-  const dep = accDepAt(a, dDate);
-  const carrying = a.cost - dep;
-  const gl = price - carrying;
-  const isGain = gl >= 0;
-  const prev = document.getElementById('dispPreview');
-  prev.style.display = 'block';
-  prev.innerHTML = '<div style="background:' + (isGain ? 'var(--success-light)' : 'var(--danger-light)') + ';border:1px solid ' + (isGain ? '#bbf7d0' : 'var(--danger-border)') + ';border-radius:var(--radius-sm);padding:14px;">' +
-    '<div style="font-weight:700;color:' + (isGain ? 'var(--success)' : 'var(--danger)') + ';margin-bottom:10px;font-size:14px">' + (isGain ? 'Satis Kari: +' : 'Satis Zarari: ') + fmt(Math.abs(gl)) + ' TRY</div>' +
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;color:var(--text-2)">' +
-      '<div>Tarihindeki birikmiş amor.: <strong>' + fmt(dep) + '</strong></div>' +
-      '<div>Defter degeri: <strong>' + fmt(carrying) + '</strong></div>' +
+function prevDisp() {
+  var a = assets.find(function(x){ return x.id === dispId; });
+  var dds = document.getElementById('dD').value;
+  var price = parseFloat(document.getElementById('dP').value) || 0;
+  if (!dds) return;
+  var dd = new Date(dds + 'T00:00:00');
+  var dep = depAt(a, dd);
+  var cv = a.cost - dep;
+  var gl = price - cv;
+  var isG = gl >= 0;
+  var el = document.getElementById('dPrev');
+  el.style.display = 'block';
+  el.innerHTML = '<div style="background:' + (isG?'var(--success-light)':'var(--danger-light)') + ';border:1px solid ' + (isG?'#bbf7d0':'var(--danger-border)') + ';border-radius:var(--radius-sm);padding:12px;font-size:12px">' +
+    '<div style="font-weight:700;color:' + (isG?'var(--success)':'var(--danger)') + ';margin-bottom:8px">' + (isG?'Satis Kari: +':'Satis Zarari: ') + fmt(Math.abs(gl)) + ' TRY</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;color:var(--text-2)">' +
+      '<div>Birikmiş amor.: <strong>' + fmt(dep) + '</strong></div>' +
+      '<div>Defter degeri: <strong>' + fmt(cv) + '</strong></div>' +
       '<div>Satis fiyati: <strong>' + fmt(price) + '</strong></div>' +
-      '<div>Net kar/(zarar): <strong style="color:' + (isGain ? 'var(--success)' : 'var(--danger)') + '">' + (gl >= 0 ? '+' : '') + fmt(gl) + '</strong></div>' +
+      '<div>Kar/(Zarar): <strong style="color:' + (isG?'var(--success)':'var(--danger)') + '">' + (gl>=0?'+':'') + fmt(gl) + '</strong></div>' +
     '</div></div>';
 }
 
-async function confirmDispose() {
-  const dDate = document.getElementById('dDate').value;
-  const price = parseFloat(document.getElementById('dPrice').value) || 0;
-  if (!dDate) { toast('Tarih girin.', 'error'); return; }
-  const r = await fetch('/api/assets/' + disposeId + '/dispose', {
-    method: 'POST', headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({disposal_date: dDate, disposal_price: price})
+async function doDispose() {
+  var dds = document.getElementById('dD').value;
+  var price = parseFloat(document.getElementById('dP').value) || 0;
+  if (!dds) { toast('Tarih girin.','error'); return; }
+  var r = await fetch('/api/assets/'+dispId+'/dispose', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({disposal_date:dds, disposal_price:price})
   });
-  const data = await r.json();
+  var data = await r.json();
   if (data.ok) {
-    const idx = assets.findIndex(function(a) { return a.id === disposeId; });
+    var idx = assets.findIndex(function(a){ return a.id === dispId; });
     if (idx >= 0) assets[idx] = data.asset;
-    document.getElementById('disposeModal').classList.remove('open');
-    renderAll();
+    closeM('dispModal');
+    renderList();
     toast('Elden cikaris kaydedildi.');
   }
 }
 
-async function undispose(id) {
-  if (!confirm('Elden cikaris geri alinsin mi?')) return;
-  await fetch('/api/assets/' + id + '/undispose', {method: 'POST'});
-  const idx = assets.findIndex(function(a) { return a.id === id; });
+async function unDisp(id) {
+  if (!confirm('Geri alinsin mi?')) return;
+  await fetch('/api/assets/'+id+'/undispose', {method:'POST'});
+  var idx = assets.findIndex(function(a){ return a.id === id; });
   if (idx >= 0) { assets[idx].disposed = 0; assets[idx].disposal_date = null; assets[idx].disposal_price = null; }
-  renderAll();
+  renderList();
   toast('Geri alindi.');
 }
+
+// Direkt çağır — DOMContentLoaded KULLANMA
+initPage();
 </script>
 {% endblock %}

@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+{% block title %}Amortisman - Frsly{% endblock %}
+
+{% block content %}
+<div class="pg-hdr flex-between">
+  <div>
+    <div class="pg-title">Amortisman</div>
+    <div class="pg-meta">IAS 16 — Dogrusal Amortisman ve Net Defter Degeri</div>
+  </div>
+  <button class="btn btn-primary" onclick="openAdd()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Varlik Ekle
+  </button>
+</div>
+
+<!-- Stats -->
+<div class="stats-grid" id="statsGrid">
+  <div class="stat-card"><div class="stat-label">Toplam Maliyet</div><div class="stat-value text-mono" id="statCost">-</div><div class="stat-sub" id="statCount">0 varlik</div></div>
+  <div class="stat-card"><div class="stat-label">Birikmiş Amortisman</div><div class="stat-value text-mono" id="statDep" style="color:var(--danger)">-</div><div class="stat-sub">Bugunce</div></div>
+  <div class="stat-card"><div class="stat-label">Net Defter Degeri</div><div class="stat-value text-mono" id="statNbv" style="color:var(--accent)">-</div><div class="stat-sub">Bugunce</div></div>
+  <div class="stat-card"><div class="stat-label">Aylik Amortisman</div><div class="stat-value text-mono" id="statMon">-</div><div class="stat-sub">Tum varliklar</div></div>
+</div>
+
+<!-- Tabs -->
+<div class="tabs">
+  <button class="tab-btn active" id="tabBtn-list" onclick="switchTab('list')">Varlik Listesi</button>
+  <button class="tab-btn" id="tabBtn-schedule" onclick="switchTab('schedule')">Amortisman Tablosu</button>
+</div>
+
+<!-- Tab: List -->
+<div class="tab-panel active" id="tab-list">
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>Varlik</th><th>Maliyet</th><th class="r">Omur</th>
+        <th>Aktivasyon</th><th class="r">Ayl. Amor.</th>
+        <th class="r">Birikmiş</th><th class="r">NBV</th><th></th>
+      </tr></thead>
+      <tbody id="assetTableBody"><tr><td colspan="8" style="text-align:center;padding:40px;color:var(--muted);">Varlik eklenmemis</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Tab: Schedule -->
+<div class="tab-panel" id="tab-schedule">
+  <div style="margin-bottom:14px;display:flex;align-items:center;gap:12px;">
+    <label style="font-size:13px;color:var(--muted);">Varlik:</label>
+    <select class="form-input" id="scheduleSelect" onchange="renderSchedule()" style="width:260px;"></select>
+    <div>
+      <label style="font-size:12px;color:var(--muted);">Raporlama Tarihi:</label>
+      <input type="date" class="form-input" id="reportDate" style="width:160px;" value="{{ now }}">
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>Donem</th><th class="r">Ay</th><th class="r">Aylik Amor.</th>
+        <th class="r">Donem Amor.</th><th class="r">Birikmiş</th><th class="r">NBV</th>
+      </tr></thead>
+      <tbody id="scheduleBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Add Modal -->
+<div class="modal" id="addModal">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <div class="modal-title" id="modalTitle">Yeni Varlik</div>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid mb-16">
+        <div class="form-group" style="grid-column:1/-1;">
+          <label class="form-label">Varlik Adi</label>
+          <input class="form-input" id="fName" placeholder="Ornek: Makine A">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Maliyet (TRY)</label>
+          <input class="form-input" type="number" id="fCost" placeholder="1000000">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Faydali Omur (Yil)</label>
+          <input class="form-input" type="number" id="fLife" placeholder="5">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Aktivasyon Tarihi</label>
+          <input class="form-input" type="date" id="fDate">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Kalinti Deger (TRY)</label>
+          <input class="form-input" type="number" id="fResidual" value="0">
+        </div>
+      </div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn btn-secondary" onclick="closeModal()">Iptal</button>
+      <button class="btn btn-primary" id="saveBtn" onclick="saveAsset()">Kaydet</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let assets = {{ assets|tojson }};
+let editingId = null;
+
+const today = new Date().toISOString().split('T')[0];
+document.getElementById('reportDate').value = today;
+
+function calcDep(asset) {
+  const rd = new Date(document.getElementById('reportDate').value + 'T00:00:00');
+  const act = new Date(asset.activation_date + 'T00:00:00');
+  if (act > rd) return { periods:[], monthlyDep:0, totalAccDep:0, nbv:asset.cost };
+  const depAmt = asset.cost - (asset.residual_value||0);
+  const totalMonths = asset.useful_life * 12;
+  const monthlyDep = depAmt / totalMonths;
+  const sy = act.getFullYear(), ey = rd.getFullYear();
+  const periods = [];
+  for (let y = sy; y <= ey; y++) {
+    let m;
+    if (y===sy && y===ey) m = rd.getMonth()-act.getMonth()+1;
+    else if (y===sy) m = 12-act.getMonth();
+    else if (y===ey) m = rd.getMonth()+1;
+    else m = 12;
+    const used = periods.reduce((s,p)=>s+p.months,0);
+    const rem = totalMonths-used;
+    if (rem<=0) break;
+    m = Math.min(m,rem);
+    if (m<=0) continue;
+    periods.push({year:y, months:m, depAmount:monthlyDep*m});
+  }
+  const totalAccDep = periods.reduce((s,p)=>s+p.depAmount,0);
+  return {periods, monthlyDep, totalAccDep, nbv:asset.cost-totalAccDep};
+}
+
+function renderAll() {
+  renderStats(); renderTable(); renderScheduleSelect(); renderSchedule();
+}
+
+function renderStats() {
+  let tCost=0,tDep=0,tNbv=0,tMon=0;
+  assets.forEach(a=>{const d=calcDep(a);tCost+=a.cost;tDep+=d.totalAccDep;tNbv+=d.nbv;tMon+=d.monthlyDep;});
+  document.getElementById('statCost').textContent = fmt0(tCost);
+  document.getElementById('statDep').textContent = fmt0(tDep);
+  document.getElementById('statNbv').textContent = fmt0(tNbv);
+  document.getElementById('statMon').textContent = fmt0(tMon);
+  document.getElementById('statCount').textContent = assets.length + ' varlik';
+}
+
+function renderTable() {
+  const tbody = document.getElementById('assetTableBody');
+  if (!assets.length) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--muted);">Henuz varlik eklenmedi</td></tr>';
+    return;
+  }
+  let tC=0,tD=0,tN=0;
+  tbody.innerHTML = assets.map(a=>{
+    const d=calcDep(a);
+    const pct=a.cost>0?d.totalAccDep/a.cost:0;
+    tC+=a.cost;tD+=d.totalAccDep;tN+=d.nbv;
+    return `<tr>
+      <td style="font-weight:500">${a.name}</td>
+      <td class="mono">${fmt0(a.cost)}</td>
+      <td class="r mono">${a.useful_life}Y</td>
+      <td class="mono">${a.activation_date}</td>
+      <td class="r mono">${fmt(d.monthlyDep)}</td>
+      <td class="r mono" style="color:var(--danger)">${fmt(d.totalAccDep)}</td>
+      <td class="r mono" style="color:var(--accent)">${fmt(d.nbv)}</td>
+      <td style="text-align:right">
+        <button class="btn btn-danger btn-sm btn-icon" onclick="deleteAsset(${a.id})" title="Sil">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+        </button>
+      </td>
+    </tr>`;
+  }).join('') + `<tr class="total"><td>TOPLAM</td><td class="mono">${fmt0(tC)}</td><td colspan="3"></td><td class="r mono">${fmt(tD)}</td><td class="r mono">${fmt(tN)}</td><td></td></tr>`;
+}
+
+function renderScheduleSelect() {
+  const sel = document.getElementById('scheduleSelect');
+  sel.innerHTML = assets.map(a=>`<option value="${a.id}">${a.name}</option>`).join('');
+}
+
+function renderSchedule() {
+  const id = parseInt(document.getElementById('scheduleSelect').value);
+  const asset = assets.find(a=>a.id===id);
+  const tbody = document.getElementById('scheduleBody');
+  if (!asset) { tbody.innerHTML=''; return; }
+  const dep = calcDep(asset);
+  let cum=0;
+  tbody.innerHTML = dep.periods.map(p=>{
+    cum+=p.depAmount;
+    return `<tr>
+      <td style="font-weight:500">${p.year} ${p.months===12?'(Tam Yil)':'('+p.months+' Ay)'}</td>
+      <td class="r mono">${p.months}</td>
+      <td class="r mono">${fmt(dep.monthlyDep)}</td>
+      <td class="r mono" style="color:var(--warning)">${fmt(p.depAmount)}</td>
+      <td class="r mono" style="color:var(--danger)">${fmt(cum)}</td>
+      <td class="r mono" style="color:var(--accent)">${fmt(asset.cost-cum)}</td>
+    </tr>`;
+  }).join('') + `<tr class="total"><td>TOPLAM</td><td class="r">${dep.periods.reduce((s,p)=>s+p.months,0)}</td><td colspan="2"></td><td class="r mono">${fmt(dep.totalAccDep)}</td><td class="r mono">${fmt(dep.nbv)}</td></tr>`;
+}
+
+function openAdd() {
+  editingId = null;
+  document.getElementById('modalTitle').textContent = 'Yeni Varlik';
+  document.getElementById('fName').value = '';
+  document.getElementById('fCost').value = '';
+  document.getElementById('fLife').value = '';
+  document.getElementById('fDate').value = '';
+  document.getElementById('fResidual').value = '0';
+  document.getElementById('addModal').classList.add('open');
+}
+function closeModal() { document.getElementById('addModal').classList.remove('open'); }
+
+async function saveAsset() {
+  const data = {
+    name: document.getElementById('fName').value.trim(),
+    cost: parseFloat(document.getElementById('fCost').value),
+    useful_life: parseInt(document.getElementById('fLife').value),
+    activation_date: document.getElementById('fDate').value,
+    residual_value: parseFloat(document.getElementById('fResidual').value)||0,
+  };
+  if (!data.name||!data.cost||!data.useful_life||!data.activation_date) { toast('Tum alanlari doldurun.','error'); return; }
+  const r = await fetch('/api/assets', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
+  const asset = await r.json();
+  assets.push(asset);
+  closeModal();
+  renderAll();
+  toast(data.name + ' eklendi.');
+}
+
+async function deleteAsset(id) {
+  if (!confirm('Bu varlik silinsin mi?')) return;
+  await fetch('/api/assets/'+id, {method:'DELETE'});
+  assets = assets.filter(a=>a.id!==id);
+  renderAll();
+  toast('Varlik silindi.');
+}
+
+document.getElementById('reportDate').onchange = renderAll;
+renderAll();
+</script>
+{% endblock %}

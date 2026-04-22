@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Giris — Frsly</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --hue: 230;
+  --accent: hsl(var(--hue), 70%, 48%);
+  --accent-light: hsl(var(--hue), 80%, 96%);
+  --accent-dark: hsl(var(--hue), 70%, 38%);
+  --bg: #f9f9fb; --surface: #fff; --border: #e8e8ed;
+  --text: #111118; --text-2: #44444f; --text-3: #88889a; --text-4: #b0b0c0;
+  --danger: #e53e3e; --danger-light: #fff5f5; --danger-border: #fecaca;
+  --radius: 12px; --radius-sm: 8px; --radius-lg: 16px;
+  --shadow: 0 1px 4px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
+  --shadow-accent: 0 4px 16px hsla(var(--hue),70%,48%,0.22);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Geist',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;-webkit-font-smoothing:antialiased;}
+
+.left-panel {
+  width: 420px; min-width: 420px; background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; padding: 48px 40px;
+}
+.right-panel {
+  flex: 1; background: linear-gradient(135deg, hsl(var(--hue),80%,97%) 0%, hsl(calc(var(--hue)+20),70%,94%) 100%);
+  display: flex; align-items: center; justify-content: center; padding: 40px;
+  position: relative; overflow: hidden;
+}
+.right-panel::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(circle at 30% 50%, hsla(var(--hue),80%,70%,0.08) 0%, transparent 60%),
+              radial-gradient(circle at 80% 20%, hsla(calc(var(--hue)+30),80%,70%,0.06) 0%, transparent 50%);
+}
+
+.brand { display: flex; align-items: center; gap: 10px; margin-bottom: 48px; }
+.brand-icon {
+  width: 36px; height: 36px; background: var(--accent); border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: var(--shadow-accent);
+}
+.brand-name { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
+
+h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.4px; margin-bottom: 6px; }
+.subtitle { font-size: 14px; color: var(--text-3); margin-bottom: 32px; }
+
+.form-group { margin-bottom: 14px; }
+.form-label { display: block; font-size: 12px; font-weight: 500; color: var(--text-2); margin-bottom: 6px; }
+.form-input {
+  width: 100%; background: var(--bg); border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text); font-size: 14px;
+  padding: 10px 14px; outline: none; transition: all 0.18s;
+  font-family: 'Geist', sans-serif;
+}
+.form-input:hover { border-color: hsl(var(--hue),50%,75%); }
+.form-input:focus { border-color: var(--accent); background: var(--surface); box-shadow: 0 0 0 3px hsla(var(--hue),70%,48%,0.1); }
+.form-input::placeholder { color: var(--text-4); }
+
+.btn-primary {
+  width: 100%; background: var(--accent); color: #fff; border: none;
+  border-radius: var(--radius-sm); font-size: 14px; font-weight: 600;
+  padding: 11px; cursor: pointer; font-family: 'Geist', sans-serif;
+  transition: all 0.18s; margin-top: 6px; box-shadow: var(--shadow-accent);
+  letter-spacing: -0.1px;
+}
+.btn-primary:hover { background: var(--accent-dark); transform: translateY(-1px); box-shadow: 0 6px 20px hsla(var(--hue),70%,48%,0.3); }
+
+.link-row { text-align: center; margin-top: 20px; font-size: 13px; color: var(--text-3); }
+.link-row a { color: var(--accent); text-decoration: none; font-weight: 500; }
+.link-row a:hover { text-decoration: underline; }
+
+.err {
+  background: var(--danger-light); border: 1px solid var(--danger-border);
+  color: var(--danger); border-radius: var(--radius-sm);
+  padding: 10px 14px; font-size: 13px; margin-bottom: 16px; display: none;
+}
+
+/* Right panel decoration */
+.rp-card {
+  background: rgba(255,255,255,0.7); backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.8); border-radius: 20px;
+  padding: 28px 32px; max-width: 340px; position: relative; z-index: 1;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.06);
+}
+.rp-title { font-size: 16px; font-weight: 700; margin-bottom: 20px; color: var(--text); }
+.rp-feature {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 14px; font-size: 13px; color: var(--text-2);
+}
+.rp-feature:last-child { margin-bottom: 0; }
+.rp-feature-icon {
+  width: 32px; height: 32px; background: var(--accent-light);
+  border-radius: 9px; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; color: var(--accent);
+}
+.rp-feature-text strong { display: block; font-weight: 600; margin-bottom: 1px; font-size: 13px; }
+.rp-feature-text span { font-size: 12px; color: var(--text-3); }
+</style>
+</head>
+<body>
+<div class="left-panel">
+  <div class="brand">
+    <div class="brand-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round">
+        <path d="M2 20h20M6 20V10M12 20V4M18 20v-8"/>
+      </svg>
+    </div>
+    <div class="brand-name">Frsly</div>
+  </div>
+
+  <h1>Tekrar hosgeldiniz</h1>
+  <div class="subtitle">Hesabiniza giris yaparak devam edin</div>
+
+  <div class="err" id="err"></div>
+
+  <div class="form-group">
+    <label class="form-label">E-posta adresi</label>
+    <input class="form-input" type="email" id="email" placeholder="ornek@sirket.com" autocomplete="email">
+  </div>
+  <div class="form-group">
+    <label class="form-label">Sifre</label>
+    <input class="form-input" type="password" id="pw" placeholder="••••••••" onkeydown="if(event.key==='Enter')login()">
+  </div>
+  <button class="btn-primary" onclick="login()">Giris Yap</button>
+  <div class="link-row">Hesabiniz yok mu? <a href="/register">Ucretsiz baslayın</a></div>
+</div>
+
+<div class="right-panel">
+  <div class="rp-card">
+    <div class="rp-title">IFRS & TFRS Hesaplamaları</div>
+    <div class="rp-feature">
+      <div class="rp-feature-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 20h20M6 20V10M12 20V4M18 20v-8"/></svg>
+      </div>
+      <div class="rp-feature-text">
+        <strong>Amortisman — IAS 16</strong>
+        <span>Dogrusal amortisman ve NBV hesaplama</span>
+      </div>
+    </div>
+    <div class="rp-feature">
+      <div class="rp-feature-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+      </div>
+      <div class="rp-feature-text">
+        <strong>IFRS 16 Kira</strong>
+        <span>Kira yukumlulugu ve kullanim hakki varligi</span>
+      </div>
+    </div>
+    <div class="rp-feature">
+      <div class="rp-feature-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9 9h1.5a1.5 1.5 0 0 1 0 3H9m0 0h2a1.5 1.5 0 0 1 0 3H9"/></svg>
+      </div>
+      <div class="rp-feature-text">
+        <strong>Reeskont — TFRS 9</strong>
+        <span>Senet bugunku deger hesaplama</span>
+      </div>
+    </div>
+    <div class="rp-feature">
+      <div class="rp-feature-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="23 11 17 17 14 14"/></svg>
+      </div>
+      <div class="rp-feature-text">
+        <strong>Izin Karsiligi — IAS 19</strong>
+        <span>Calisan izin yukumlulugu</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){const h=localStorage.getItem('frsly-hue');if(h)document.documentElement.style.setProperty('--hue',h);})();
+async function login() {
+  const email = document.getElementById('email').value.trim();
+  const pw = document.getElementById('pw').value;
+  if (!email || !pw) { showErr('Lutfen tum alanlari doldurun.'); return; }
+  const r = await fetch('/login', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email, password:pw})});
+  const d = await r.json();
+  if (d.ok) window.location.href = '/dashboard';
+  else showErr(d.msg);
+}
+function showErr(msg) { const e=document.getElementById('err'); e.textContent=msg; e.style.display='block'; }
+</script>
+</body>
+</html>

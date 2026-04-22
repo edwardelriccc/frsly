@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% block title %}Izin Karsiligi - Frsly{% endblock %}
+
+{% block content %}
+<div class="pg-hdr flex-between">
+  <div>
+    <div class="pg-title">Izin Karsiligi</div>
+    <div class="pg-meta">IAS 19 — Calisan Kullanilmamis Izin Yukumlulugu</div>
+  </div>
+  <button class="btn btn-primary" onclick="document.getElementById('addModal').classList.add('open')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Calisan Ekle
+  </button>
+</div>
+
+<div class="stats-grid">
+  <div class="stat-card"><div class="stat-label">Toplam Calisan</div><div class="stat-value text-mono" id="statCount">-</div><div class="stat-sub">Kayitli</div></div>
+  <div class="stat-card"><div class="stat-label">Toplam Brut Karsilik</div><div class="stat-value text-mono" id="statGross" style="color:var(--danger)">-</div><div class="stat-sub">TRY</div></div>
+  <div class="stat-card"><div class="stat-label">SGK Isv. Payi</div><div class="stat-value text-mono" id="statSS">-</div><div class="stat-sub">TRY</div></div>
+  <div class="stat-card"><div class="stat-label">Toplam Yukumluluk</div><div class="stat-value text-mono" id="statTotal" style="color:var(--accent)">-</div><div class="stat-sub">TRY</div></div>
+</div>
+
+<div class="table-wrap">
+  <table>
+    <thead><tr>
+      <th>Calisan</th><th class="r">Gunluk Ucret</th><th class="r">Kullanilmamis Gun</th>
+      <th class="r">Brut Karsilik</th><th class="r">SGK (%{{ items[0].social_security_rate if items else '20.5' }})</th>
+      <th class="r">Toplam Yukumluluk</th><th></th>
+    </tr></thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+</div>
+
+<div class="alert alert-info mt-20" style="font-size:12px;">
+  <strong>IAS 19 Notu:</strong> Kullanilmamis yillik izin hakki, birikimli izin olarak siniflandirilir ve raporlama tarihindeki cari maas uzerinden hesaplanir. SGK isveren payi (%20.5 standart oran) karsiliklara dahil edilir.
+</div>
+
+<!-- Add Modal -->
+<div class="modal" id="addModal">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <div class="modal-title">Calisan Ekle</div>
+      <button class="modal-close" onclick="document.getElementById('addModal').classList.remove('open')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid mb-16">
+        <div class="form-group" style="grid-column:1/-1;">
+          <label class="form-label">Calisan Adi Soyadi</label>
+          <input class="form-input" id="fName" placeholder="Ad Soyad">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Gunluk Brut Ucret (TRY)</label>
+          <input class="form-input" type="number" id="fSalary" placeholder="1500">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Kullanilmamis Izin (Gun)</label>
+          <input class="form-input" type="number" step="0.5" id="fDays" placeholder="14">
+        </div>
+        <div class="form-group">
+          <label class="form-label">SGK Isveren Payi (%)</label>
+          <input class="form-input" type="number" step="0.1" id="fSS" value="20.5">
+        </div>
+      </div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn btn-secondary" onclick="document.getElementById('addModal').classList.remove('open')">Iptal</button>
+      <button class="btn btn-primary" onclick="addItem()">Kaydet</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let items = {{ items|tojson }};
+
+function calc(item) {
+  const gross = item.daily_gross_salary * item.unused_leave_days;
+  const ss = gross * (item.social_security_rate / 100);
+  return {gross, ss, total: gross+ss};
+}
+
+function renderAll() {
+  let tGross=0, tSS=0, tTotal=0;
+  const tbody = document.getElementById('tableBody');
+  if (!items.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--muted);">Calisan eklenmemis</td></tr>';
+  } else {
+    tbody.innerHTML = items.map(item=>{
+      const c = calc(item);
+      tGross+=c.gross; tSS+=c.ss; tTotal+=c.total;
+      return `<tr>
+        <td style="font-weight:500">${item.employee_name}</td>
+        <td class="r mono">${fmt(item.daily_gross_salary)}</td>
+        <td class="r mono">${item.unused_leave_days}</td>
+        <td class="r mono" style="color:var(--danger)">${fmt(c.gross)}</td>
+        <td class="r mono">${fmt(c.ss)}</td>
+        <td class="r mono" style="color:var(--accent);font-weight:600">${fmt(c.total)}</td>
+        <td style="text-align:right">
+          <button class="btn btn-danger btn-sm btn-icon" onclick="deleteItem(${item.id})">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          </button>
+        </td>
+      </tr>`;
+    }).join('') +
+    `<tr class="total"><td>TOPLAM</td><td colspan="2"></td><td class="r mono">${fmt(tGross)}</td><td class="r mono">${fmt(tSS)}</td><td class="r mono">${fmt(tTotal)}</td><td></td></tr>`;
+  }
+  document.getElementById('statCount').textContent = items.length;
+  document.getElementById('statGross').textContent = fmt0(tGross);
+  document.getElementById('statSS').textContent = fmt0(tSS);
+  document.getElementById('statTotal').textContent = fmt0(tTotal);
+}
+
+async function addItem() {
+  const data = {
+    employee_name: document.getElementById('fName').value.trim(),
+    daily_gross_salary: parseFloat(document.getElementById('fSalary').value),
+    unused_leave_days: parseFloat(document.getElementById('fDays').value),
+    social_security_rate: parseFloat(document.getElementById('fSS').value)||20.5,
+  };
+  if (!data.employee_name||!data.daily_gross_salary||!data.unused_leave_days) {
+    toast('Tum alanlari doldurun.','error'); return;
+  }
+  const r = await fetch('/api/izin', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
+  const item = await r.json();
+  items.push(item);
+  document.getElementById('addModal').classList.remove('open');
+  renderAll();
+  toast(data.employee_name + ' eklendi.');
+}
+
+async function deleteItem(id) {
+  if (!confirm('Bu kayit silinsin mi?')) return;
+  await fetch('/api/izin/'+id, {method:'DELETE'});
+  items = items.filter(i=>i.id!==id);
+  renderAll();
+  toast('Silindi.');
+}
+
+renderAll();
+</script>
+{% endblock %}

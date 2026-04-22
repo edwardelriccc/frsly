@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+{% block title %}IFRS 16 Kira - Frsly{% endblock %}
+
+{% block content %}
+<div class="pg-hdr flex-between">
+  <div>
+    <div class="pg-title">IFRS 16 — Kira Sozlesmeleri</div>
+    <div class="pg-meta">Kullanim Hakki Varligi ve Kira Yukumlulugu Hesaplama</div>
+  </div>
+  <button class="btn btn-primary" onclick="document.getElementById('addModal').classList.add('open')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Sozlesme Ekle
+  </button>
+</div>
+
+<!-- Lease list -->
+{% if not leases %}
+<div class="table-wrap">
+  <div class="empty-state">
+    <div class="empty-icon">📋</div>
+    <div class="empty-title">Kira Sozlesmesi Yok</div>
+    <div class="empty-sub">Yeni bir kira sozlesmesi ekleyerek IFRS 16 hesaplamasina baslayin.</div>
+  </div>
+</div>
+{% else %}
+<div style="display:grid;gap:14px;margin-bottom:24px;" id="leaseCards">
+  {% for lease in leases %}
+  <div class="card" id="lc-{{ lease.id }}">
+    <div class="card-hdr">
+      <div style="font-size:14px;font-weight:600;">{{ lease.name }}</div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="badge badge-green">{{ lease.currency }}</span>
+        <button class="btn btn-danger btn-sm" onclick="deleteLease({{ lease.id }})">Sil</button>
+        <button class="btn btn-secondary btn-sm" onclick="loadSchedule({{ lease.id }})">Tabloyu Goster</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:16px;">
+        <div><div class="stat-label">Baslangic</div><div class="text-mono" style="font-size:13px;">{{ lease.commencement_date }}</div></div>
+        <div><div class="stat-label">Sure</div><div class="text-mono" style="font-size:13px;">{{ lease.lease_term }} {% if lease.payment_frequency=='monthly' %}Ay{% elif lease.payment_frequency=='quarterly' %}Cieyrek{% else %}Yil{% endif %}</div></div>
+        <div><div class="stat-label">Odeme</div><div class="text-mono" style="font-size:13px;">{{ '{:,.0f}'.format(lease.payment_amount) }}</div></div>
+        <div><div class="stat-label">Iskonto Orani</div><div class="text-mono" style="font-size:13px;">%{{ lease.discount_rate }}</div></div>
+        <div><div class="stat-label">Siklik</div><div class="text-mono" style="font-size:13px;">{% if lease.payment_frequency=='monthly' %}Aylik{% elif lease.payment_frequency=='quarterly' %}Ceyreklik{% else %}Yillik{% endif %}</div></div>
+      </div>
+      <!-- Schedule container -->
+      <div id="schedule-{{ lease.id }}" style="display:none;">
+        <div class="divider"></div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px;" id="sched-summary-{{ lease.id }}"></div>
+        <div class="table-wrap" style="max-height:320px;overflow-y:auto;">
+          <table>
+            <thead><tr><th>Donem</th><th>Tarih</th><th class="r">Odeme</th><th class="r">Faiz</th><th class="r">Anapara</th><th class="r">Kalan Bakiye</th></tr></thead>
+            <tbody id="sched-body-{{ lease.id }}"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- Add Modal -->
+<div class="modal" id="addModal">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <div class="modal-title">Yeni Kira Sozlesmesi</div>
+      <button class="modal-close" onclick="document.getElementById('addModal').classList.remove('open')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid mb-16">
+        <div class="form-group" style="grid-column:1/-1;">
+          <label class="form-label">Sozlesme Adi</label>
+          <input class="form-input" id="fName" placeholder="Ornek: Ofis Kirasi">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Baslangic Tarihi</label>
+          <input class="form-input" type="date" id="fDate">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Odeme Sikligi</label>
+          <select class="form-input" id="fFreq">
+            <option value="monthly">Aylik</option>
+            <option value="quarterly">Ceyreklik</option>
+            <option value="annually">Yillik</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Kira Suresi (Ay)</label>
+          <input class="form-input" type="number" id="fTerm" placeholder="24">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Odeme Tutari</label>
+          <input class="form-input" type="number" id="fPayment" placeholder="10000">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Iskonto Orani (%)</label>
+          <input class="form-input" type="number" step="0.01" id="fRate" placeholder="25.00">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Para Birimi</label>
+          <select class="form-input" id="fCurrency">
+            <option value="TRY">TRY</option>
+            <option value="USD">USD</option>
+            <option value="EUR">EUR</option>
+          </select>
+        </div>
+      </div>
+      <div class="alert alert-info" style="font-size:12px;">
+        Iskonto orani olarak sirketin artimsal borclanma faiz oranini (IBR) kullanin. TFRS 16.26 uyarinca, kiranin zımni faiz orani belirlenemiyorsa IBR kullanilir.
+      </div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn btn-secondary" onclick="document.getElementById('addModal').classList.remove('open')">Iptal</button>
+      <button class="btn btn-primary" onclick="addLease()">Hesapla ve Kaydet</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function addLease() {
+  const data = {
+    name: document.getElementById('fName').value.trim(),
+    commencement_date: document.getElementById('fDate').value,
+    lease_term: parseInt(document.getElementById('fTerm').value),
+    payment_amount: parseFloat(document.getElementById('fPayment').value),
+    payment_frequency: document.getElementById('fFreq').value,
+    discount_rate: parseFloat(document.getElementById('fRate').value),
+    currency: document.getElementById('fCurrency').value,
+  };
+  if (!data.name || !data.commencement_date || !data.lease_term || !data.payment_amount || !data.discount_rate) {
+    toast('Tum alanlari doldurun.', 'error'); return;
+  }
+  const r = await fetch('/api/leases', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
+  if (r.ok) {
+    toast('Sozlesme eklendi, sayfa yenileniyor...');
+    setTimeout(()=>window.location.reload(), 1000);
+  }
+}
+
+async function loadSchedule(id) {
+  const container = document.getElementById('schedule-' + id);
+  if (container.style.display !== 'none') { container.style.display = 'none'; return; }
+  const r = await fetch('/api/leases/' + id + '/schedule');
+  const data = await r.json();
+  // Summary
+  document.getElementById('sched-summary-' + id).innerHTML = `
+    <div class="stat-card"><div class="stat-label">Kullanim Hakki Varligi</div><div class="stat-value text-mono" style="font-size:16px">${fmt0(data.pv)}</div><div class="stat-sub">${data.currency}</div></div>
+    <div class="stat-card"><div class="stat-label">Toplam Odeme</div><div class="stat-value text-mono" style="font-size:16px">${fmt0(data.total_payment)}</div><div class="stat-sub">${data.currency}</div></div>
+    <div class="stat-card"><div class="stat-label">Toplam Faiz</div><div class="stat-value text-mono" style="font-size:16px;color:var(--danger)">${fmt0(data.total_interest)}</div><div class="stat-sub">${data.currency}</div></div>
+  `;
+  // Table
+  document.getElementById('sched-body-' + id).innerHTML = data.schedule.map(row=>`
+    <tr>
+      <td class="mono">${row.period}</td>
+      <td class="mono">${row.date}</td>
+      <td class="r mono">${fmt(row.payment)}</td>
+      <td class="r mono" style="color:var(--warning)">${fmt(row.interest)}</td>
+      <td class="r mono">${fmt(row.principal)}</td>
+      <td class="r mono" style="color:var(--accent)">${fmt(row.balance)}</td>
+    </tr>`).join('') +
+    `<tr class="total"><td colspan="2">TOPLAM</td><td class="r mono">${fmt(data.total_payment)}</td><td class="r mono">${fmt(data.total_interest)}</td><td class="r mono">${fmt(data.pv)}</td><td></td></tr>`;
+  container.style.display = 'block';
+}
+
+async function deleteLease(id) {
+  if (!confirm('Bu sozlesme silinsin mi?')) return;
+  await fetch('/api/leases/'+id, {method:'DELETE'});
+  const el = document.getElementById('lc-' + id);
+  if (el) el.remove();
+  toast('Sozlesme silindi.');
+}
+</script>
+{% endblock %}

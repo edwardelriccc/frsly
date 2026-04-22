@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% block title %}Reeskont - Frsly{% endblock %}
+
+{% block content %}
+<div class="pg-hdr flex-between">
+  <div>
+    <div class="pg-title">Reeskont</div>
+    <div class="pg-meta">TMS 18 / TFRS 9 — Senet Reeskontu Hesaplama</div>
+  </div>
+  <button class="btn btn-primary" onclick="document.getElementById('addModal').classList.add('open')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Senet Ekle
+  </button>
+</div>
+
+<!-- Summary -->
+<div class="stats-grid" id="summaryCards">
+  <div class="stat-card"><div class="stat-label">Toplam Nominal</div><div class="stat-value text-mono" id="statNominal">-</div><div class="stat-sub">Tum senetler</div></div>
+  <div class="stat-card"><div class="stat-label">Toplam Reeskont Gideri</div><div class="stat-value text-mono" id="statDiscount" style="color:var(--danger)">-</div><div class="stat-sub">Iskonto tutari</div></div>
+  <div class="stat-card"><div class="stat-label">Net Bugunku Deger</div><div class="stat-value text-mono" id="statPV" style="color:var(--accent)">-</div><div class="stat-sub">Reeskont sonrasi</div></div>
+  <div class="stat-card"><div class="stat-label">Senet Sayisi</div><div class="stat-value text-mono" id="statCount">-</div><div class="stat-sub">Aktif senet</div></div>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" id="tabBtn-alacak" onclick="switchTab('alacak')">Alacak Senetleri</button>
+  <button class="tab-btn" id="tabBtn-borc" onclick="switchTab('borc')">Borc Senetleri</button>
+</div>
+
+<div class="tab-panel active" id="tab-alacak">
+  <div class="table-wrap"><table>
+    <thead><tr><th>Ad / Aciklama</th><th class="r">Nominal Deger</th><th>Vade</th><th class="r">Oran %</th><th class="r">Gun</th><th class="r">Reeskont</th><th class="r">Bugunku Deger</th><th></th></tr></thead>
+    <tbody id="alacakBody"></tbody>
+  </table></div>
+</div>
+
+<div class="tab-panel" id="tab-borc">
+  <div class="table-wrap"><table>
+    <thead><tr><th>Ad / Aciklama</th><th class="r">Nominal Deger</th><th>Vade</th><th class="r">Oran %</th><th class="r">Gun</th><th class="r">Reeskont</th><th class="r">Bugunku Deger</th><th></th></tr></thead>
+    <tbody id="borcBody"></tbody>
+  </table></div>
+</div>
+
+<!-- Add Modal -->
+<div class="modal" id="addModal">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <div class="modal-title">Senet Ekle</div>
+      <button class="modal-close" onclick="document.getElementById('addModal').classList.remove('open')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid mb-16">
+        <div class="form-group" style="grid-column:1/-1;">
+          <label class="form-label">Aciklama</label>
+          <input class="form-input" id="fName" placeholder="Ornek: ABC Tic. A.S. senedi">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Senet Turu</label>
+          <select class="form-input" id="fType">
+            <option value="alacak">Alacak Senedi</option>
+            <option value="borc">Borc Senedi</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nominal Deger</label>
+          <input class="form-input" type="number" id="fValue" placeholder="100000">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Duzenleme Tarihi</label>
+          <input class="form-input" type="date" id="fIssue">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Vade Tarihi</label>
+          <input class="form-input" type="date" id="fMaturity">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Yillik Iskonto Orani (%)</label>
+          <input class="form-input" type="number" step="0.01" id="fRate" placeholder="25.00">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Para Birimi</label>
+          <select class="form-input" id="fCurrency">
+            <option value="TRY">TRY</option>
+            <option value="USD">USD</option>
+            <option value="EUR">EUR</option>
+          </select>
+        </div>
+      </div>
+      <div class="alert alert-info" style="font-size:12px;">
+        Reeskont hesaplamasinda dis iskonto yontemi kullanilmaktadir: PD = ND / (1 + r × t). Merkez Bankasi reeskont orani veya sirketin belirledigindis iskonto orani kullanilabilir.
+      </div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn btn-secondary" onclick="document.getElementById('addModal').classList.remove('open')">Iptal</button>
+      <button class="btn btn-primary" onclick="addItem()">Kaydet</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let items = {{ items|tojson }};
+
+function calcItem(item) {
+  const issue = new Date(item.issue_date);
+  const maturity = new Date(item.maturity_date);
+  const days = Math.round((maturity - issue) / (1000*60*60*24));
+  if (days <= 0) return {pv: item.face_value, discount: 0, days: 0};
+  const t = days / 365;
+  const pv = item.face_value / (1 + (item.discount_rate/100) * t);
+  return {pv: pv, discount: item.face_value - pv, days: days};
+}
+
+function renderAll() {
+  let totalNominal=0, totalDiscount=0, totalPV=0;
+  const alacak = items.filter(i=>i.item_type==='alacak');
+  const borc = items.filter(i=>i.item_type==='borc');
+
+  function rows(arr, tbodyId) {
+    const tbody = document.getElementById(tbodyId);
+    if (!arr.length) {
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--muted);">Senet eklenmemis</td></tr>';
+      return;
+    }
+    tbody.innerHTML = arr.map(item=>{
+      const c = calcItem(item);
+      totalNominal += item.face_value;
+      totalDiscount += c.discount;
+      totalPV += c.pv;
+      return `<tr>
+        <td style="font-weight:500">${item.name}</td>
+        <td class="r mono">${fmt0(item.face_value)}</td>
+        <td class="mono">${item.maturity_date}</td>
+        <td class="r mono">%${item.discount_rate}</td>
+        <td class="r mono">${c.days}</td>
+        <td class="r mono" style="color:var(--danger)">${fmt(c.discount)}</td>
+        <td class="r mono" style="color:var(--accent)">${fmt(c.pv)}</td>
+        <td style="text-align:right">
+          <button class="btn btn-danger btn-sm btn-icon" onclick="deleteItem(${item.id})">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          </button>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  rows(alacak, 'alacakBody');
+  rows(borc, 'borcBody');
+
+  document.getElementById('statNominal').textContent = fmt0(totalNominal);
+  document.getElementById('statDiscount').textContent = fmt0(totalDiscount);
+  document.getElementById('statPV').textContent = fmt0(totalPV);
+  document.getElementById('statCount').textContent = items.length;
+}
+
+async function addItem() {
+  const data = {
+    name: document.getElementById('fName').value.trim(),
+    item_type: document.getElementById('fType').value,
+    face_value: parseFloat(document.getElementById('fValue').value),
+    issue_date: document.getElementById('fIssue').value,
+    maturity_date: document.getElementById('fMaturity').value,
+    discount_rate: parseFloat(document.getElementById('fRate').value),
+    currency: document.getElementById('fCurrency').value,
+  };
+  if (!data.name||!data.face_value||!data.issue_date||!data.maturity_date||!data.discount_rate) {
+    toast('Tum alanlari doldurun.','error'); return;
+  }
+  const r = await fetch('/api/reeskont', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
+  const item = await r.json();
+  items.push(item);
+  document.getElementById('addModal').classList.remove('open');
+  renderAll();
+  toast(data.name + ' eklendi.');
+}
+
+async function deleteItem(id) {
+  if (!confirm('Bu senet silinsin mi?')) return;
+  await fetch('/api/reeskont/'+id, {method:'DELETE'});
+  items = items.filter(i=>i.id!==id);
+  renderAll();
+  toast('Senet silindi.');
+}
+
+renderAll();
+</script>
+{% endblock %}

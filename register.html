@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kayit — Frsly</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--hue:230;--accent:hsl(var(--hue),70%,48%);--accent-light:hsl(var(--hue),80%,96%);--accent-dark:hsl(var(--hue),70%,38%);--bg:#f9f9fb;--surface:#fff;--border:#e8e8ed;--text:#111118;--text-2:#44444f;--text-3:#88889a;--text-4:#b0b0c0;--danger:#e53e3e;--danger-light:#fff5f5;--danger-border:#fecaca;--success:#16a34a;--radius-sm:8px;--shadow-accent:0 4px 16px hsla(var(--hue),70%,48%,0.22);}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Geist',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;-webkit-font-smoothing:antialiased;}
+.wrap{width:100%;max-width:440px;}
+.brand{display:flex;align-items:center;gap:10px;justify-content:center;margin-bottom:32px;}
+.brand-icon{width:36px;height:36px;background:var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow-accent);}
+.brand-name{font-size:20px;font-weight:700;letter-spacing:-0.3px;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:32px;box-shadow:0 4px 24px rgba(0,0,0,0.05);}
+h1{font-size:22px;font-weight:700;letter-spacing:-0.3px;margin-bottom:6px;}
+.subtitle{font-size:13px;color:var(--text-3);margin-bottom:24px;}
+.free-pill{background:var(--accent-light);border:1px solid hsl(var(--hue),60%,85%);border-radius:10px;padding:10px 14px;font-size:12px;color:hsl(var(--hue),65%,40%);margin-bottom:22px;display:flex;align-items:center;gap:8px;font-weight:500;}
+.form-group{margin-bottom:14px;}
+.form-label{display:block;font-size:12px;font-weight:500;color:var(--text-2);margin-bottom:6px;}
+.form-input{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:14px;padding:10px 14px;outline:none;transition:all 0.18s;font-family:'Geist',sans-serif;}
+.form-input:hover{border-color:hsl(var(--hue),50%,75%);}
+.form-input:focus{border-color:var(--accent);background:var(--surface);box-shadow:0 0 0 3px hsla(var(--hue),70%,48%,0.1);}
+.form-input::placeholder{color:var(--text-4);}
+.btn{width:100%;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:600;padding:11px;cursor:pointer;font-family:'Geist',sans-serif;transition:all 0.18s;margin-top:6px;box-shadow:var(--shadow-accent);}
+.btn:hover{background:var(--accent-dark);transform:translateY(-1px);}
+.link-row{text-align:center;margin-top:18px;font-size:13px;color:var(--text-3);}
+.link-row a{color:var(--accent);text-decoration:none;font-weight:500;}
+.err{background:var(--danger-light);border:1px solid var(--danger-border);color:var(--danger);border-radius:var(--radius-sm);padding:10px 14px;font-size:13px;margin-bottom:14px;display:none;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <div class="brand-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round">
+        <path d="M2 20h20M6 20V10M12 20V4M18 20v-8"/>
+      </svg>
+    </div>
+    <div class="brand-name">Frsly</div>
+  </div>
+  <div class="card">
+    <h1>Hesap Olusturun</h1>
+    <div class="subtitle">Ucretsiz baslayın, ihtiyaciniza gore genisledin</div>
+    <div class="free-pill">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+      Kayit olunca Amortisman modulu ucretsiz aktif edilir
+    </div>
+    <div class="err" id="err"></div>
+    <div class="form-group">
+      <label class="form-label">Sirket / Ad Soyad</label>
+      <input class="form-input" type="text" id="company" placeholder="Ornek: ABC Danismanlik">
+    </div>
+    <div class="form-group">
+      <label class="form-label">E-posta adresi</label>
+      <input class="form-input" type="email" id="email" placeholder="ornek@sirket.com">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Sifre</label>
+      <input class="form-input" type="password" id="pw" placeholder="En az 6 karakter">
+    </div>
+    <button class="btn" onclick="register()">Hesap Olustur</button>
+    <div class="link-row">Zaten hesabiniz var mi? <a href="/login">Giris Yapin</a></div>
+  </div>
+</div>
+<script>
+(function(){const h=localStorage.getItem('frsly-hue');if(h)document.documentElement.style.setProperty('--hue',h);})();
+async function register() {
+  const company=document.getElementById('company').value.trim();
+  const email=document.getElementById('email').value.trim();
+  const pw=document.getElementById('pw').value;
+  if(!email||!pw){showErr('Lutfen tum alanlari doldurun.');return;}
+  if(pw.length<6){showErr('Sifre en az 6 karakter olmalidir.');return;}
+  const r=await fetch('/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pw,company})});
+  const d=await r.json();
+  if(d.ok)window.location.href='/dashboard';
+  else showErr(d.msg);
+}
+function showErr(msg){const e=document.getElementById('err');e.textContent=msg;e.style.display='block';}
+</script>
+</body>
+</html>

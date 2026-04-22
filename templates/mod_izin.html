@@ -1,36 +1,29 @@
 {% extends "base.html" %}
 {% block title %}Izin Karsiligi — Frsly{% endblock %}
-{% block extra_style %}
-.emp-badge{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;background:var(--accent-light);color:var(--accent);border-radius:50%;font-size:11px;font-weight:700;}
-{% endblock %}
 {% block content %}
 <div class="pg-hdr">
   <div>
     <div class="pg-title">Izin Karsiligi</div>
-    <div class="pg-meta">IAS 19 — Kullanilmamis Yillik Izin Yukumlulugu ve Hareket Tablosu</div>
+    <div class="pg-meta">IAS 19 — Kullanilmamis Yillik Izin Yukumlulugu</div>
   </div>
-  <button class="btn btn-primary" onclick="document.getElementById('addModal').classList.add('open')">
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-    Calisan Ekle
-  </button>
+  <button class="btn btn-primary" onclick="document.getElementById('addModal').classList.add('open')">+ Calisan Ekle</button>
 </div>
 
-<div class="period-bar">
-  <span class="period-label">Raporlama Donemi:</span>
-  <select class="period-select" id="periodSel" onchange="onPeriodChange()"></select>
-  <span class="period-info" id="periodInfo"></span>
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 18px;margin-bottom:20px;display:flex;align-items:center;gap:14px;box-shadow:var(--shadow-sm);">
+  <span style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:0.5px;">Raporlama Tarihi:</span>
+  <input type="date" id="rd" class="form-input" style="width:180px;" onchange="renderAll()">
 </div>
 
 <div class="stats-row">
   <div class="stat-card"><div class="stat-label">Toplam Calisan</div><div class="stat-value" id="sCount">—</div><div class="stat-sub">Kayitli</div></div>
   <div class="stat-card"><div class="stat-label">Brut Karsilik</div><div class="stat-value stat-danger" id="sGross">—</div><div class="stat-sub">TRY</div></div>
-  <div class="stat-card"><div class="stat-label">SGK Isveren</div><div class="stat-value" id="sSS">—</div><div class="stat-sub">TRY</div></div>
+  <div class="stat-card"><div class="stat-label">SGK Isveren Payi</div><div class="stat-value" id="sSS">—</div><div class="stat-sub">TRY</div></div>
   <div class="stat-card"><div class="stat-label">Toplam Yukumluluk</div><div class="stat-value stat-accent" id="sTotal">—</div><div class="stat-sub">TRY</div></div>
 </div>
 
 <div class="tabs">
   <button class="tab-btn active" id="tabBtn-list" onclick="switchTab('list')">Calisan Listesi</button>
-  <button class="tab-btn" id="tabBtn-movement" onclick="switchTab('movement');loadMovement()">Hareket Tablosu</button>
+  <button class="tab-btn" id="tabBtn-movement" onclick="switchTab('movement');renderMovement()">Hareket Tablosu</button>
 </div>
 
 <div class="tab-panel active" id="tab-list">
@@ -38,7 +31,7 @@
     <table>
       <thead><tr>
         <th style="width:48px">#</th>
-        <th class="r">Gunluk Brut Ucret</th><th class="r">Kullanilmamis Gun</th>
+        <th class="r">Gunluk Brut Ucret</th><th class="r">Kull. Izin Gunu</th>
         <th class="r">SGK %</th><th class="r">Brut Karsilik</th>
         <th class="r">SGK Payi</th><th class="r">Toplam</th><th></th>
       </tr></thead>
@@ -47,12 +40,12 @@
   </div>
   <div class="alert alert-info mt-16">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-    <div>IAS 19 uyarinca birikimli izin hakki raporlama tarihindeki cari maas uzerinden hesaplanir. Calisanlar otomatik numaralanir (Calisan 1, 2, 3...).</div>
+    <div>IAS 19 uyarinca birikimli izin hakki raporlama tarihindeki cari maas uzerinden hesaplanir. Calisanlar otomatik numaralanir.</div>
   </div>
 </div>
 
 <div class="tab-panel" id="tab-movement">
-  <div style="font-size:12px;color:var(--text-3);margin-bottom:12px;font-weight:500;" id="mvInfo"></div>
+  <p style="font-size:12px;color:var(--text-3);margin-bottom:12px;font-weight:500;" id="mvInfo"></p>
   <div class="table-wrap">
     <table>
       <thead><tr>
@@ -63,24 +56,20 @@
       <tbody id="mvBody"></tbody>
     </table>
   </div>
-  <div class="alert alert-warn mt-16">
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-    <div>Acilis karsiligi, doneme ait bir onceki yil sonu (31 Aralik) bazli tahmindir. Donem gideri = Kapanis - Acilis.</div>
-  </div>
 </div>
 
 <!-- Add Modal -->
 <div class="modal" id="addModal">
   <div class="modal-box">
-    <div class="modal-hdr"><div class="modal-title">Calisan Ekle</div><button class="modal-close" onclick="document.getElementById('addModal').classList.remove('open')">×</button></div>
+    <div class="modal-hdr"><div class="modal-title">Calisan Ekle</div><button class="modal-close" onclick="document.getElementById('addModal').classList.remove('open')">x</button></div>
     <div class="modal-body">
-      <div style="background:var(--accent-light);border:1px solid var(--accent-mid);border-radius:var(--radius-sm);padding:10px 14px;font-size:12px;color:var(--accent-text);margin-bottom:14px;font-weight:500;">
-        Sistem otomatik olarak <strong>Calisan 1, 2, 3...</strong> seklinde numaralandirir.
+      <div style="background:var(--accent-light);border:1px solid var(--accent-mid);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--accent-text);margin-bottom:14px;font-weight:500;">
+        Sistem otomatik <strong>Calisan 1, 2, 3...</strong> seklinde numaralandirir.
       </div>
-      <div class="form-row form-row-2" style="gap:14px;">
-        <div class="form-group"><label class="form-label">Gunluk Brut Ucret (TRY)</label><input class="form-input" type="number" step="0.01" id="fSal" placeholder="1500.00"></div>
-        <div class="form-group"><label class="form-label">Kullanilmamis Gun</label><input class="form-input" type="number" step="0.5" id="fDays" placeholder="14"></div>
-        <div class="form-group form-row-full"><label class="form-label">SGK Isveren Payi (%)</label><input class="form-input" type="number" step="0.1" id="fSS" value="20.5"></div>
+      <div class="form-row form-row-2" style="gap:12px;">
+        <div><label class="form-label">Gunluk Brut Ucret (TRY)</label><input class="form-input" type="number" step="0.01" id="fSal" placeholder="1500"></div>
+        <div><label class="form-label">Kullanilmamis Izin Gunu</label><input class="form-input" type="number" step="0.5" id="fDays" placeholder="14"></div>
+        <div style="grid-column:1/-1;"><label class="form-label">SGK Isveren Payi (%)</label><input class="form-input" type="number" step="0.1" id="fSS" value="20.5"></div>
       </div>
     </div>
     <div class="modal-ftr">
@@ -93,12 +82,12 @@
 <!-- Edit Modal -->
 <div class="modal" id="editModal">
   <div class="modal-box">
-    <div class="modal-hdr"><div class="modal-title" id="eTitle">Duzenle</div><button class="modal-close" onclick="document.getElementById('editModal').classList.remove('open')">×</button></div>
+    <div class="modal-hdr"><div class="modal-title" id="eTitle">Duzenle</div><button class="modal-close" onclick="document.getElementById('editModal').classList.remove('open')">x</button></div>
     <div class="modal-body">
-      <div class="form-row form-row-2" style="gap:14px;">
-        <div class="form-group"><label class="form-label">Gunluk Brut Ucret</label><input class="form-input" type="number" step="0.01" id="eSal"></div>
-        <div class="form-group"><label class="form-label">Kullanilmamis Gun</label><input class="form-input" type="number" step="0.5" id="eDays"></div>
-        <div class="form-group form-row-full"><label class="form-label">SGK Isveren Payi (%)</label><input class="form-input" type="number" step="0.1" id="eSS"></div>
+      <div class="form-row form-row-2" style="gap:12px;">
+        <div><label class="form-label">Gunluk Brut Ucret</label><input class="form-input" type="number" step="0.01" id="eSal"></div>
+        <div><label class="form-label">Kullanilmamis Izin Gunu</label><input class="form-input" type="number" step="0.5" id="eDays"></div>
+        <div style="grid-column:1/-1;"><label class="form-label">SGK Isveren Payi (%)</label><input class="form-input" type="number" step="0.1" id="eSS"></div>
       </div>
     </div>
     <div class="modal-ftr">
@@ -113,133 +102,126 @@
 <script>
 var items = {{ items | tojson }};
 var editId = null;
-var curP = currentPeriod();
 
-function initPage() {
-  document.getElementById('periodSel').innerHTML = buildPeriodOptions(curP);
-  refreshInfo();
-  renderList();
-}
-
-function onPeriodChange() {
-  curP = document.getElementById('periodSel').value;
-  refreshInfo();
-  if (document.getElementById('tab-movement').classList.contains('active')) loadMovement();
-}
-
-function refreshInfo() {
-  var rd = periodLastDay(curP);
-  document.getElementById('periodInfo').textContent =
-    'Raporlama: ' + rd.getDate() + '.' + String(rd.getMonth()+1).padStart(2,'0') + '.' + rd.getFullYear();
-}
+// Bugün
+var today = new Date();
+document.getElementById('rd').value = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
 
 function calcI(item) {
   var g = item.daily_gross_salary * item.unused_leave_days;
-  var s = g * (item.social_security_rate / 100);
+  var s = g * (item.social_security_rate/100);
   return {g:g, s:s, t:g+s};
 }
 
-function renderList() {
-  var tG=0, tS=0, tT=0;
+function renderAll() {
+  var tG=0,tS=0,tT=0;
   var tb = document.getElementById('izinBody');
   if (!items.length) {
-    tb.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-3)">Henuz calisan eklenmedi</td></tr>';
+    tb.innerHTML='<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-3)">Henuz calisan eklenmedi.</td></tr>';
   } else {
-    var h = '';
-    items.forEach(function(item) {
-      var c = calcI(item);
-      tG+=c.g; tS+=c.s; tT+=c.t;
-      h += '<tr>' +
-        '<td><span class="emp-badge">' + item.employee_no + '</span></td>' +
-        '<td class="r mono">' + fmt(item.daily_gross_salary) + '</td>' +
-        '<td class="r mono">' + item.unused_leave_days + '</td>' +
-        '<td class="r mono">%' + item.social_security_rate + '</td>' +
-        '<td class="r mono" style="color:var(--danger)">' + fmt(c.g) + '</td>' +
-        '<td class="r mono">' + fmt(c.s) + '</td>' +
-        '<td class="r mono" style="color:var(--accent);font-weight:700">' + fmt(c.t) + '</td>' +
-        '<td><div style="display:flex;gap:4px;justify-content:flex-end;">' +
-          '<button class="btn btn-secondary btn-sm" onclick="openEdit(' + item.id + ')">Duzenle</button>' +
-          '<button class="btn btn-danger btn-sm" onclick="delItem(' + item.id + ')">Sil</button>' +
+    var h='';
+    items.forEach(function(item){
+      var c=calcI(item); tG+=c.g; tS+=c.s; tT+=c.t;
+      h+='<tr>'+
+        '<td><div style="width:26px;height:26px;background:var(--accent-light);color:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;">'+item.employee_no+'</div></td>'+
+        '<td class="r">'+fmt(item.daily_gross_salary)+'</td>'+
+        '<td class="r">'+item.unused_leave_days+'</td>'+
+        '<td class="r">%'+item.social_security_rate+'</td>'+
+        '<td class="r" style="color:var(--danger);">'+fmt(c.g)+'</td>'+
+        '<td class="r">'+fmt(c.s)+'</td>'+
+        '<td class="r" style="color:var(--accent);font-weight:700;">'+fmt(c.t)+'</td>'+
+        '<td><div style="display:flex;gap:4px;justify-content:flex-end;">'+
+          '<button class="btn btn-secondary btn-sm" onclick="openEdit('+item.id+')">Duzenle</button>'+
+          '<button class="btn btn-danger btn-sm" onclick="delItem('+item.id+')">Sil</button>'+
         '</div></td></tr>';
     });
-    h += '<tr class="total"><td>TOPLAM</td><td colspan="3"></td><td class="r mono">' + fmt(tG) + '</td><td class="r mono">' + fmt(tS) + '</td><td class="r mono">' + fmt(tT) + '</td><td></td></tr>';
-    tb.innerHTML = h;
+    h+='<tr class="total"><td>TOPLAM</td><td colspan="3"></td><td class="r">'+fmt(tG)+'</td><td class="r">'+fmt(tS)+'</td><td class="r">'+fmt(tT)+'</td><td></td></tr>';
+    tb.innerHTML=h;
   }
-  document.getElementById('sCount').textContent = items.length;
-  document.getElementById('sGross').textContent = fmt0(tG);
-  document.getElementById('sSS').textContent = fmt0(tS);
-  document.getElementById('sTotal').textContent = fmt0(tT);
+  document.getElementById('sCount').textContent=items.length;
+  document.getElementById('sGross').textContent=fmt0(tG);
+  document.getElementById('sSS').textContent=fmt0(tS);
+  document.getElementById('sTotal').textContent=fmt0(tT);
 }
 
-async function loadMovement() {
-  var res = await fetch('/api/izin/movement?period=' + curP);
-  var data = await res.json();
-  document.getElementById('mvInfo').textContent = 'Acilis: ' + data.od + '  |  Kapanis: ' + data.rd;
-  var tb = document.getElementById('mvBody');
-  if (!data.rows.length) { tb.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text-3)">Calisan yok</td></tr>'; return; }
-  var h = '';
-  data.rows.forEach(function(r) {
-    var cc = r.period_charge >= 0 ? 'var(--danger)' : 'var(--success)';
-    h += '<tr>' +
-      '<td><span class="emp-badge">' + r.employee_no + '</span></td>' +
-      '<td class="r mono">' + fmt(r.daily_salary) + '</td>' +
-      '<td class="r mono">' + r.days + '</td>' +
-      '<td class="r mono">' + fmt(r.open_total) + '</td>' +
-      '<td class="r mono" style="color:' + cc + '">' + (r.period_charge>=0?'+':'') + fmt(r.period_charge) + '</td>' +
-      '<td class="r mono">' + fmt(r.close_gross) + '</td>' +
-      '<td class="r mono">' + fmt(r.close_ss) + '</td>' +
-      '<td class="r mono" style="color:var(--accent);font-weight:700">' + fmt(r.close_total) + '</td></tr>';
+function renderMovement() {
+  var rdVal = document.getElementById('rd').value;
+  var rd = rdVal ? new Date(rdVal+'T00:00:00') : new Date();
+  var prevY = new Date(rd.getFullYear()-1,11,31);
+  var prevMon = prevY.getMonth()+1;
+  var curMon = rd.getMonth()+1;
+  document.getElementById('mvInfo').textContent =
+    'Acilis: 31.12.'+(rd.getFullYear()-1)+'  |  Kapanis: '+
+    String(rd.getDate()).padStart(2,'0')+'.'+String(curMon).padStart(2,'0')+'.'+rd.getFullYear();
+
+  var tOp=0,tPC=0,tCG=0,tCS=0,tCT=0;
+  var h='';
+  items.forEach(function(item){
+    var c = calcI(item);
+    var ratio = curMon > 0 ? (prevMon/curMon) : 0;
+    var openG = c.g * ratio;
+    var openS = openG * (item.social_security_rate/100);
+    var openT = openG + openS;
+    var periodC = c.t - openT;
+    tOp+=openT; tPC+=periodC; tCG+=c.g; tCS+=c.s; tCT+=c.t;
+    h+='<tr>'+
+      '<td><div style="width:26px;height:26px;background:var(--accent-light);color:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;">'+item.employee_no+'</div></td>'+
+      '<td class="r">'+fmt(item.daily_gross_salary)+'</td>'+
+      '<td class="r">'+item.unused_leave_days+'</td>'+
+      '<td class="r">'+fmt(openT)+'</td>'+
+      '<td class="r" style="color:'+(periodC>=0?'var(--danger)':'var(--success)')+';">'+(periodC>=0?'+':'')+fmt(periodC)+'</td>'+
+      '<td class="r">'+fmt(c.g)+'</td>'+
+      '<td class="r">'+fmt(c.s)+'</td>'+
+      '<td class="r" style="color:var(--accent);font-weight:700;">'+fmt(c.t)+'</td></tr>';
   });
-  var t = data.totals;
-  h += '<tr class="total"><td colspan="3">TOPLAM</td><td class="r mono">' + fmt(t.open_total) + '</td><td class="r mono">' + fmt(t.period_charge) + '</td><td class="r mono">' + fmt(t.close_gross) + '</td><td class="r mono">' + fmt(t.close_ss) + '</td><td class="r mono">' + fmt(t.close_total) + '</td></tr>';
-  tb.innerHTML = h;
+  h+='<tr class="total"><td colspan="3">TOPLAM</td><td class="r">'+fmt(tOp)+'</td><td class="r">'+fmt(tPC)+'</td><td class="r">'+fmt(tCG)+'</td><td class="r">'+fmt(tCS)+'</td><td class="r">'+fmt(tCT)+'</td></tr>';
+  document.getElementById('mvBody').innerHTML = h || '<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text-3)">Calisan yok</td></tr>';
 }
 
 async function addItem() {
-  var sal = parseFloat(document.getElementById('fSal').value);
-  var days = parseFloat(document.getElementById('fDays').value);
-  var ss = parseFloat(document.getElementById('fSS').value) || 20.5;
-  if (!sal || !days) { toast('Alanlari doldurun.','error'); return; }
-  var r = await fetch('/api/izin', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({daily_gross_salary:sal, unused_leave_days:days, social_security_rate:ss})});
-  var item = await r.json();
+  var sal=parseFloat(document.getElementById('fSal').value);
+  var days=parseFloat(document.getElementById('fDays').value);
+  var ss=parseFloat(document.getElementById('fSS').value)||20.5;
+  if (!sal||!days){toast('Alanlari doldurun.','error');return;}
+  var r=await fetch('/api/izin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({daily_gross_salary:sal,unused_leave_days:days,social_security_rate:ss})});
+  var item=await r.json();
   items.push(item);
   document.getElementById('addModal').classList.remove('open');
-  renderList();
-  toast('Calisan ' + item.employee_no + ' eklendi.');
+  renderAll();
+  toast('Calisan '+item.employee_no+' eklendi.');
 }
 
 function openEdit(id) {
-  editId = id;
-  var item = items.find(function(i){ return i.id === id; });
-  document.getElementById('eTitle').textContent = 'Calisan ' + item.employee_no + ' — Duzenle';
-  document.getElementById('eSal').value = item.daily_gross_salary;
-  document.getElementById('eDays').value = item.unused_leave_days;
-  document.getElementById('eSS').value = item.social_security_rate;
+  editId=id;
+  var item=items.find(function(i){return i.id===id;});
+  document.getElementById('eTitle').textContent='Calisan '+item.employee_no+' Duzenle';
+  document.getElementById('eSal').value=item.daily_gross_salary;
+  document.getElementById('eDays').value=item.unused_leave_days;
+  document.getElementById('eSS').value=item.social_security_rate;
   document.getElementById('editModal').classList.add('open');
 }
 
 async function saveEdit() {
-  var sal = parseFloat(document.getElementById('eSal').value);
-  var days = parseFloat(document.getElementById('eDays').value);
-  var ss = parseFloat(document.getElementById('eSS').value) || 20.5;
-  var r = await fetch('/api/izin/'+editId, {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({daily_gross_salary:sal, unused_leave_days:days, social_security_rate:ss})});
-  var item = await r.json();
-  var idx = items.findIndex(function(i){ return i.id === editId; });
-  if (idx >= 0) items[idx] = item;
+  var sal=parseFloat(document.getElementById('eSal').value);
+  var days=parseFloat(document.getElementById('eDays').value);
+  var ss=parseFloat(document.getElementById('eSS').value)||20.5;
+  var r=await fetch('/api/izin/'+editId,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({daily_gross_salary:sal,unused_leave_days:days,social_security_rate:ss})});
+  var item=await r.json();
+  var idx=items.findIndex(function(i){return i.id===editId;});
+  if(idx>=0)items[idx]=item;
   document.getElementById('editModal').classList.remove('open');
-  renderList();
+  renderAll();
   toast('Guncellendi.');
 }
 
 async function delItem(id) {
-  if (!confirm('Silinsin mi?')) return;
-  await fetch('/api/izin/'+id, {method:'DELETE'});
-  items = items.filter(function(i){ return i.id !== id; });
-  renderList();
+  if(!confirm('Silinsin mi?'))return;
+  await fetch('/api/izin/'+id,{method:'DELETE'});
+  items=items.filter(function(i){return i.id!==id;});
+  renderAll();
   toast('Silindi.');
 }
 
-// Direkt çağır
-initPage();
+renderAll();
 </script>
 {% endblock %}

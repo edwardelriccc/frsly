@@ -108,7 +108,7 @@ def get_user_modules(user_id):
 def index():
     if 'user_id' in session:
         return redirect(url_for('dashboard'))
-    return render_template('landing.html', modules=MODULES)
+    return redirect(url_for('login'))
 
 @app.route('/login', methods=['GET','POST'])
 def login():

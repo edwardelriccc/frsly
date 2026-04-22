@@ -14,6 +14,7 @@ MODULES = {
     'amortisman':  {'name': 'Amortisman', 'price': 199, 'desc': 'IAS 16 dogrusal amortisman ve net defter degeri'},
     'izin':        {'name': 'Izin Karsılıgı', 'price': 199, 'desc': 'IAS 19 calisan izin yukumlulugu hesaplama'},
     'etb':         {'name': 'ETB / IFRS Raporlama', 'price': 499, 'desc': 'Mizan yukle, IFRS finansal tablolar ve dipnotlar'},
+    ADMIN_EMAIL = 'admin@frsly.com'
 }
 
 def get_db():
@@ -100,6 +101,9 @@ def login_required(f):
 
 def get_user_modules(user_id):
     with get_db() as db:
+        user = db.execute('SELECT email FROM users WHERE id=?', (user_id,)).fetchone()
+        if user and user['email'] == ADMIN_EMAIL:
+            return list(MODULES.keys())
         rows = db.execute('SELECT module FROM subscriptions WHERE user_id=? AND active=1', (user_id,)).fetchall()
     return [r['module'] for r in rows]
 

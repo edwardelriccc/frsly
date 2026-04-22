@@ -1,70 +1,151 @@
 {% extends "base.html" %}
-{% block title %}Izin Karsiligi - Frsly{% endblock %}
-
+{% block title %}Izin Karsiligi — Frsly{% endblock %}
+{% block extra_style %}
+.period-bar{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 16px;margin-bottom:20px;box-shadow:var(--shadow-sm);}
+.period-label{font-size:12px;font-weight:600;color:var(--text-3);white-space:nowrap;}
+.period-select{border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-size:13px;padding:6px 10px;outline:none;font-family:'Montserrat',sans-serif;font-weight:500;cursor:pointer;transition:all 0.18s;}
+.period-select:focus{border-color:var(--accent);}
+.emp-no{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:var(--accent-light);color:var(--accent);border-radius:50%;font-size:12px;font-weight:700;}
+{% endblock %}
 {% block content %}
-<div class="pg-hdr flex-between">
-  <div>
+<div class="pg-hdr">
+  <div class="pg-hdr-left">
     <div class="pg-title">Izin Karsiligi</div>
-    <div class="pg-meta">IAS 19 — Calisan Kullanilmamis Izin Yukumlulugu</div>
+    <div class="pg-meta">IAS 19 — Kullanilmamis Yillik Izin Yukumlulugu ve Hareket Tablosu</div>
   </div>
   <button class="btn btn-primary" onclick="document.getElementById('addModal').classList.add('open')">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     Calisan Ekle
   </button>
 </div>
 
-<div class="stats-grid">
-  <div class="stat-card"><div class="stat-label">Toplam Calisan</div><div class="stat-value text-mono" id="statCount">-</div><div class="stat-sub">Kayitli</div></div>
-  <div class="stat-card"><div class="stat-label">Toplam Brut Karsilik</div><div class="stat-value text-mono" id="statGross" style="color:var(--danger)">-</div><div class="stat-sub">TRY</div></div>
-  <div class="stat-card"><div class="stat-label">SGK Isv. Payi</div><div class="stat-value text-mono" id="statSS">-</div><div class="stat-sub">TRY</div></div>
-  <div class="stat-card"><div class="stat-label">Toplam Yukumluluk</div><div class="stat-value text-mono" id="statTotal" style="color:var(--accent)">-</div><div class="stat-sub">TRY</div></div>
+<!-- Period Picker -->
+<div class="period-bar">
+  <span class="period-label">Raporlama Donemi:</span>
+  <select class="period-select" id="periodSelect" onchange="onPeriodChange()"></select>
+  <span style="font-size:12px;color:var(--text-3);" id="periodInfo"></span>
 </div>
 
-<div class="table-wrap">
-  <table>
-    <thead><tr>
-      <th>Calisan</th><th class="r">Gunluk Ucret</th><th class="r">Kullanilmamis Gun</th>
-      <th class="r">Brut Karsilik</th><th class="r">SGK (%{{ items[0].social_security_rate if items else '20.5' }})</th>
-      <th class="r">Toplam Yukumluluk</th><th></th>
-    </tr></thead>
-    <tbody id="tableBody"></tbody>
-  </table>
+<!-- Stats -->
+<div class="stats-row">
+  <div class="stat-card"><div class="stat-label">Toplam Calisan</div><div class="stat-value" id="sCount">—</div><div class="stat-sub">Kayitli</div></div>
+  <div class="stat-card"><div class="stat-label">Brut Karsilik</div><div class="stat-value stat-danger" id="sGross">—</div><div class="stat-sub">TRY</div></div>
+  <div class="stat-card"><div class="stat-label">SGK Isveren</div><div class="stat-value" id="sSS">—</div><div class="stat-sub">TRY</div></div>
+  <div class="stat-card"><div class="stat-label">Toplam Yukumluluk</div><div class="stat-value stat-accent" id="sTotal">—</div><div class="stat-sub">TRY</div></div>
 </div>
 
-<div class="alert alert-info mt-20" style="font-size:12px;">
-  <strong>IAS 19 Notu:</strong> Kullanilmamis yillik izin hakki, birikimli izin olarak siniflandirilir ve raporlama tarihindeki cari maas uzerinden hesaplanir. SGK isveren payi (%20.5 standart oran) karsiliklara dahil edilir.
+<!-- Tabs -->
+<div class="tabs">
+  <button class="tab-btn active" id="tabBtn-list" onclick="switchTab('list')">Calisan Listesi</button>
+  <button class="tab-btn" id="tabBtn-movement" onclick="switchTab('movement');loadMovement()">Hareket Tablosu</button>
+</div>
+
+<!-- Tab: List -->
+<div class="tab-panel active" id="tab-list">
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th style="width:50px">#</th>
+        <th class="r">Gunluk Brut Ucret</th>
+        <th class="r">Kullanilmamis Gun</th>
+        <th class="r">SGK Orani</th>
+        <th class="r">Brut Karsilik</th>
+        <th class="r">SGK Payi</th>
+        <th class="r">Toplam Yukumluluk</th>
+        <th></th>
+      </tr></thead>
+      <tbody id="izinBody"></tbody>
+    </table>
+  </div>
+  <div class="alert alert-info mt-16" style="font-size:12px;">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <div>IAS 19 uyarinca birikimli izin hakki, raporlama tarihindeki cari maas uzerinden hesaplanir. SGK isveren payi (%20.5 standart) karsiliklara dahil edilir. Calisanlar otomatik numaralanir.</div>
+  </div>
+</div>
+
+<!-- Tab: Movement -->
+<div class="tab-panel" id="tab-movement">
+  <div style="font-size:12px;color:var(--text-3);margin-bottom:12px;" id="movementInfo"></div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>#</th>
+        <th class="r">Gunluk Ucret</th>
+        <th class="r">Gun</th>
+        <th class="r">Acilis Karsiligi</th>
+        <th class="r">Donem Gideri</th>
+        <th class="r">Kapanis Brut</th>
+        <th class="r">Kapanis SGK</th>
+        <th class="r">Kapanis Toplam</th>
+      </tr></thead>
+      <tbody id="movementBody"></tbody>
+    </table>
+  </div>
+  <div class="alert alert-warn mt-16" style="font-size:12px;">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    <div>Acilis karsiligi, secilen raporlama donemi yilinin bir onceki yil sonuna gore hesaplanmaktadir. Donem gideri = Kapanis - Acilis.</div>
+  </div>
 </div>
 
 <!-- Add Modal -->
 <div class="modal" id="addModal">
   <div class="modal-box">
     <div class="modal-hdr">
-      <div class="modal-title">Calisan Ekle</div>
-      <button class="modal-close" onclick="document.getElementById('addModal').classList.remove('open')">×</button>
+      <div class="modal-title" id="modalTitle">Calisan Ekle</div>
+      <button class="modal-close" onclick="closeAdd()">×</button>
     </div>
     <div class="modal-body">
-      <div class="form-grid mb-16">
-        <div class="form-group" style="grid-column:1/-1;">
-          <label class="form-label">Calisan Adi Soyadi</label>
-          <input class="form-input" id="fName" placeholder="Ad Soyad">
-        </div>
+      <div style="background:var(--accent-light);border:1px solid var(--accent-mid);border-radius:var(--radius-sm);padding:10px 14px;font-size:12px;color:var(--accent-text);margin-bottom:16px;">
+        Calisan ismi girilmez. Sistem otomatik olarak <strong>Calisan 1, Calisan 2...</strong> seklinde numaralandirir.
+      </div>
+      <div class="form-row form-row-2" style="gap:14px;">
         <div class="form-group">
           <label class="form-label">Gunluk Brut Ucret (TRY)</label>
-          <input class="form-input" type="number" id="fSalary" placeholder="1500">
+          <input class="form-input" type="number" step="0.01" id="fSalary" placeholder="1500.00">
         </div>
         <div class="form-group">
-          <label class="form-label">Kullanilmamis Izin (Gun)</label>
+          <label class="form-label">Kullanilmamis Izin Gunu</label>
           <input class="form-input" type="number" step="0.5" id="fDays" placeholder="14">
         </div>
-        <div class="form-group">
+        <div class="form-group form-row-full">
           <label class="form-label">SGK Isveren Payi (%)</label>
           <input class="form-input" type="number" step="0.1" id="fSS" value="20.5">
         </div>
       </div>
     </div>
     <div class="modal-ftr">
-      <button class="btn btn-secondary" onclick="document.getElementById('addModal').classList.remove('open')">Iptal</button>
-      <button class="btn btn-primary" onclick="addItem()">Kaydet</button>
+      <button class="btn btn-secondary" onclick="closeAdd()">Iptal</button>
+      <button class="btn btn-primary" onclick="addItem()">Ekle</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal" id="editModal">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <div class="modal-title" id="editTitle">Duzenle</div>
+      <button class="modal-close" onclick="closeEdit()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row form-row-2" style="gap:14px;">
+        <div class="form-group">
+          <label class="form-label">Gunluk Brut Ucret (TRY)</label>
+          <input class="form-input" type="number" step="0.01" id="eSalary">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Kullanilmamis Izin Gunu</label>
+          <input class="form-input" type="number" step="0.5" id="eDays">
+        </div>
+        <div class="form-group form-row-full">
+          <label class="form-label">SGK Isveren Payi (%)</label>
+          <input class="form-input" type="number" step="0.1" id="eSS">
+        </div>
+      </div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn btn-secondary" onclick="closeEdit()">Iptal</button>
+      <button class="btn btn-primary" onclick="saveEdit()">Kaydet</button>
     </div>
   </div>
 </div>
@@ -73,70 +154,144 @@
 {% block scripts %}
 <script>
 let items = {{ items|tojson }};
+let editId = null;
+let curPeriod = currentPeriod();
+
+function initPeriod() {
+  document.getElementById('periodSelect').innerHTML = buildPeriodOptions(curPeriod);
+  updatePeriodInfo();
+}
+function onPeriodChange() {
+  curPeriod = document.getElementById('periodSelect').value;
+  updatePeriodInfo();
+  renderAll();
+  if (document.getElementById('tab-movement').classList.contains('active')) loadMovement();
+}
+function updatePeriodInfo() {
+  const [y, m] = curPeriod.split('-').map(Number);
+  const lastDay = new Date(y, m, 0).getDate();
+  document.getElementById('periodInfo').textContent = `Raporlama: ${lastDay}.${String(m).padStart(2,'0')}.${y}`;
+}
 
 function calc(item) {
   const gross = item.daily_gross_salary * item.unused_leave_days;
   const ss = gross * (item.social_security_rate / 100);
-  return {gross, ss, total: gross+ss};
+  return {gross, ss, total: gross + ss};
 }
 
 function renderAll() {
   let tGross=0, tSS=0, tTotal=0;
-  const tbody = document.getElementById('tableBody');
+  const tbody = document.getElementById('izinBody');
   if (!items.length) {
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--muted);">Calisan eklenmemis</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-3)">Henuz calisan eklenmedi</td></tr>';
   } else {
-    tbody.innerHTML = items.map(item=>{
+    tbody.innerHTML = items.map(item => {
       const c = calc(item);
-      tGross+=c.gross; tSS+=c.ss; tTotal+=c.total;
+      tGross += c.gross; tSS += c.ss; tTotal += c.total;
       return `<tr>
-        <td style="font-weight:500">${item.employee_name}</td>
+        <td><span class="emp-no">${item.employee_no}</span></td>
         <td class="r mono">${fmt(item.daily_gross_salary)}</td>
         <td class="r mono">${item.unused_leave_days}</td>
+        <td class="r mono">%${item.social_security_rate}</td>
         <td class="r mono" style="color:var(--danger)">${fmt(c.gross)}</td>
         <td class="r mono">${fmt(c.ss)}</td>
         <td class="r mono" style="color:var(--accent);font-weight:600">${fmt(c.total)}</td>
-        <td style="text-align:right">
-          <button class="btn btn-danger btn-sm btn-icon" onclick="deleteItem(${item.id})">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-          </button>
+        <td>
+          <div style="display:flex;gap:4px;justify-content:flex-end;">
+            <button class="btn btn-secondary btn-sm" onclick="openEdit(${item.id})">Duzenle</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteItem(${item.id})">Sil</button>
+          </div>
         </td>
       </tr>`;
     }).join('') +
-    `<tr class="total"><td>TOPLAM</td><td colspan="2"></td><td class="r mono">${fmt(tGross)}</td><td class="r mono">${fmt(tSS)}</td><td class="r mono">${fmt(tTotal)}</td><td></td></tr>`;
+    `<tr class="total"><td>TOPLAM</td><td colspan="3"></td><td class="r mono">${fmt(tGross)}</td><td class="r mono">${fmt(tSS)}</td><td class="r mono">${fmt(tTotal)}</td><td></td></tr>`;
   }
-  document.getElementById('statCount').textContent = items.length;
-  document.getElementById('statGross').textContent = fmt0(tGross);
-  document.getElementById('statSS').textContent = fmt0(tSS);
-  document.getElementById('statTotal').textContent = fmt0(tTotal);
+  document.getElementById('sCount').textContent = items.length;
+  document.getElementById('sGross').textContent = fmt0(tGross);
+  document.getElementById('sSS').textContent = fmt0(tSS);
+  document.getElementById('sTotal').textContent = fmt0(tTotal);
 }
 
+async function loadMovement() {
+  const res = await fetch(`/api/izin/movement?period=${curPeriod}`);
+  const data = await res.json();
+  document.getElementById('movementInfo').textContent =
+    `Acilis Tarihi: ${data.od} | Kapanis Tarihi: ${data.rd}`;
+  const tbody = document.getElementById('movementBody');
+  if (!data.rows.length) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-3)">Calisan yok</td></tr>';
+    return;
+  }
+  tbody.innerHTML = data.rows.map(r => `
+    <tr>
+      <td><span class="emp-no">${r.employee_no}</span></td>
+      <td class="r mono">${fmt(r.daily_salary)}</td>
+      <td class="r mono">${r.days}</td>
+      <td class="r mono">${fmt(r.open_total)}</td>
+      <td class="r mono" style="color:${r.period_charge>=0?'var(--danger)':'var(--success)'}">${r.period_charge>=0?'+':''}${fmt(r.period_charge)}</td>
+      <td class="r mono">${fmt(r.close_gross)}</td>
+      <td class="r mono">${fmt(r.close_ss)}</td>
+      <td class="r mono" style="color:var(--accent);font-weight:600">${fmt(r.close_total)}</td>
+    </tr>`).join('') +
+    `<tr class="total"><td colspan="3">TOPLAM</td>
+      <td class="r mono">${fmt(data.totals.open_total)}</td>
+      <td class="r mono">${fmt(data.totals.period_charge)}</td>
+      <td class="r mono">${fmt(data.totals.close_gross)}</td>
+      <td class="r mono">${fmt(data.totals.close_ss)}</td>
+      <td class="r mono">${fmt(data.totals.close_total)}</td>
+    </tr>`;
+}
+
+function closeAdd() { document.getElementById('addModal').classList.remove('open'); }
 async function addItem() {
   const data = {
-    employee_name: document.getElementById('fName').value.trim(),
     daily_gross_salary: parseFloat(document.getElementById('fSalary').value),
     unused_leave_days: parseFloat(document.getElementById('fDays').value),
-    social_security_rate: parseFloat(document.getElementById('fSS').value)||20.5,
+    social_security_rate: parseFloat(document.getElementById('fSS').value) || 20.5,
   };
-  if (!data.employee_name||!data.daily_gross_salary||!data.unused_leave_days) {
-    toast('Tum alanlari doldurun.','error'); return;
-  }
+  if (!data.daily_gross_salary || !data.unused_leave_days) { toast('Alanlari doldurun.','error'); return; }
   const r = await fetch('/api/izin', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
   const item = await r.json();
   items.push(item);
-  document.getElementById('addModal').classList.remove('open');
+  closeAdd();
   renderAll();
-  toast(data.employee_name + ' eklendi.');
+  toast(`Calisan ${item.employee_no} eklendi.`);
+}
+
+function openEdit(id) {
+  editId = id;
+  const item = items.find(i => i.id === id);
+  document.getElementById('editTitle').textContent = `Calisan ${item.employee_no} Duzenle`;
+  document.getElementById('eSalary').value = item.daily_gross_salary;
+  document.getElementById('eDays').value = item.unused_leave_days;
+  document.getElementById('eSS').value = item.social_security_rate;
+  document.getElementById('editModal').classList.add('open');
+}
+function closeEdit() { document.getElementById('editModal').classList.remove('open'); }
+async function saveEdit() {
+  const data = {
+    daily_gross_salary: parseFloat(document.getElementById('eSalary').value),
+    unused_leave_days: parseFloat(document.getElementById('eDays').value),
+    social_security_rate: parseFloat(document.getElementById('eSS').value) || 20.5,
+  };
+  const r = await fetch('/api/izin/'+editId, {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
+  const item = await r.json();
+  const idx = items.findIndex(i => i.id === editId);
+  if (idx >= 0) items[idx] = item;
+  closeEdit();
+  renderAll();
+  toast('Guncellendi.');
 }
 
 async function deleteItem(id) {
   if (!confirm('Bu kayit silinsin mi?')) return;
   await fetch('/api/izin/'+id, {method:'DELETE'});
-  items = items.filter(i=>i.id!==id);
+  items = items.filter(i => i.id !== id);
   renderAll();
   toast('Silindi.');
 }
 
+initPeriod();
 renderAll();
 </script>
 {% endblock %}

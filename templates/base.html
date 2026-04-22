@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{% block title %}Frsly{% endblock %}</title>
-<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swapfamily=JetBrains+Mono:wght@400;500https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swapdisplay=swap" rel="stylesheet">
 <style>
 /* ── TEMA ─────────────────────────────────────── */
 :root {
@@ -52,7 +52,7 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { font-size: 14px; }
 body {
-  font-family: 'Geist', -apple-system, sans-serif;
+  font-family: 'Montserrat', -apple-system, sans-serif;
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
@@ -95,7 +95,7 @@ body {
 }
 .sb-brand-sub {
   font-size: 10px; color: var(--text-3); margin-top: 1px;
-  font-family: 'Geist Mono', monospace; letter-spacing: 0.2px;
+  font-family: 'JetBrains Mono', monospace; letter-spacing: 0.2px;
 }
 
 .sb-user {
@@ -121,7 +121,7 @@ body {
   font-size: 10px; font-weight: 600; color: var(--text-4);
   text-transform: uppercase; letter-spacing: 0.8px;
   padding: 8px 8px 4px;
-  font-family: 'Geist Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
 }
 
 .nav-item {
@@ -144,7 +144,7 @@ body {
 .nav-item:hover .nav-icon { color: var(--text-2); }
 .nav-lock { margin-left: auto; width: 12px; height: 12px; color: var(--text-4); }
 .nav-badge {
-  margin-left: auto; font-size: 10px; font-family: 'Geist Mono', monospace;
+  margin-left: auto; font-size: 10px; font-family: 'JetBrains Mono', monospace;
   background: var(--accent); color: #fff; padding: 1px 7px; border-radius: 20px;
   font-weight: 500;
 }
@@ -171,8 +171,8 @@ body {
 }
 .stat-card:hover { border-color: var(--border-hover); box-shadow: var(--shadow); }
 .stat-label { font-size: 11px; font-weight: 500; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
-.stat-value { font-size: 19px; font-weight: 700; font-family: 'Geist Mono', monospace; letter-spacing: -0.5px; color: var(--text); }
-.stat-sub { font-size: 11px; color: var(--text-4); margin-top: 4px; font-family: 'Geist Mono', monospace; }
+.stat-value { font-size: 19px; font-weight: 700; font-family: 'JetBrains Mono', monospace; letter-spacing: -0.5px; color: var(--text); }
+.stat-sub { font-size: 11px; color: var(--text-4); margin-top: 4px; font-family: 'JetBrains Mono', monospace; }
 .stat-accent { color: var(--accent) !important; }
 .stat-danger { color: var(--danger) !important; }
 .stat-success { color: var(--success) !important; }
@@ -192,7 +192,7 @@ body {
 .card-title {
   font-size: 12px; font-weight: 600; color: var(--text-3);
   text-transform: uppercase; letter-spacing: 0.6px;
-  font-family: 'Geist Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
 }
 .card-body { padding: 20px; }
 
@@ -207,7 +207,7 @@ thead th {
   font-size: 11px; font-weight: 600; color: var(--text-3);
   text-transform: uppercase; letter-spacing: 0.5px;
   background: var(--surface2); border-bottom: 1px solid var(--border);
-  font-family: 'Geist Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   white-space: nowrap;
 }
 th.r, td.r { text-align: right; }
@@ -223,13 +223,13 @@ tr.total td {
   color: var(--accent-text); border-top: 1px solid var(--accent-mid);
   border-bottom: none;
 }
-td.mono { font-family: 'Geist Mono', monospace; font-size: 12px; }
+td.mono { font-family: 'JetBrains Mono', monospace; font-size: 12px; }
 td.fw { font-weight: 600; color: var(--text); }
 
 /* ── BUTTONS ──────────────────────────────────── */
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-  border: none; font-family: 'Geist', sans-serif;
+  border: none; font-family: 'Montserrat', sans-serif;
   font-size: 13px; font-weight: 500; cursor: pointer;
   padding: 8px 16px; border-radius: var(--radius-sm);
   transition: all var(--transition); text-decoration: none;
@@ -268,7 +268,7 @@ td.fw { font-weight: 600; color: var(--text); }
   border: 1.5px solid var(--border); border-radius: var(--radius-sm);
   color: var(--text); font-size: 13px; padding: 9px 12px;
   outline: none; transition: all var(--transition);
-  font-family: 'Geist', sans-serif;
+  font-family: 'Montserrat', sans-serif;
 }
 .form-input:hover { border-color: var(--border-hover); }
 .form-input:focus { border-color: var(--accent); background: var(--surface); box-shadow: 0 0 0 3px hsla(var(--hue),70%,48%,0.1); }
@@ -284,7 +284,7 @@ select.form-input { cursor: pointer; }
 .tab-btn {
   padding: 9px 18px; border: none; background: transparent;
   color: var(--text-3); cursor: pointer;
-  font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 500;
+  font-family: 'Montserrat', sans-serif; font-size: 13px; font-weight: 500;
   border-bottom: 2px solid transparent; margin-bottom: -1.5px;
   transition: all var(--transition);
 }
@@ -297,7 +297,7 @@ select.form-input { cursor: pointer; }
 .badge {
   display: inline-flex; align-items: center; gap: 4px;
   padding: 3px 9px; border-radius: 20px;
-  font-size: 11px; font-weight: 500; font-family: 'Geist Mono', monospace;
+  font-size: 11px; font-weight: 500; font-family: 'JetBrains Mono', monospace;
 }
 .badge-accent { background: var(--accent-light); color: var(--accent-text); border: 1px solid var(--accent-mid); }
 .badge-success { background: var(--success-light); color: var(--success); border: 1px solid #bbf7d0; }
@@ -401,7 +401,7 @@ select.form-input { cursor: pointer; }
 .text-accent { color: var(--accent); } .text-danger { color: var(--danger); }
 .text-muted { color: var(--text-3); } .text-dim { color: var(--text-4); }
 .fw-600 { font-weight: 600; } .fw-700 { font-weight: 700; }
-.mono { font-family: 'Geist Mono', monospace; font-size: 12px; }
+.mono { font-family: 'JetBrains Mono', monospace; font-size: 12px; }
 .divider { height: 1px; background: var(--border); margin: 16px 0; }
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -552,3 +552,23 @@ function pct(n) { return (n*100).toFixed(1) + '%'; }
 {% block scripts %}{% endblock %}
 </body>
 </html>
+<script>
+// Period picker helper
+function buildPeriodOptions(selectedPeriod) {
+  const months = ['Ocak','Subat','Mart','Nisan','Mayis','Haziran','Temmuz','Agustos','Eylul','Ekim','Kasim','Aralik'];
+  const today = new Date();
+  let opts = '';
+  for (let y = today.getFullYear() + 1; y >= today.getFullYear() - 5; y--) {
+    for (let m = 12; m >= 1; m--) {
+      const val = `${y}-${String(m).padStart(2,'0')}`;
+      const label = `${months[m-1]} ${y}`;
+      opts += `<option value="${val}" ${val === selectedPeriod ? 'selected' : ''}>${label}</option>`;
+    }
+  }
+  return opts;
+}
+function currentPeriod() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+}
+</script>
